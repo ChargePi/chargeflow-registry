@@ -20,7 +20,7 @@ like to see.
 ### 🛠️ Pull Requests
 
 1. Fork the repo and create your branch from `main`.
-2. Install all dependencies. ([Installation Procedure])
-3. If you've added code that should be tested, add tests and ensure they pass. ([Testing Procedure])
-4. Ensure your code lints (consistency is key).
-5. Submit a pull request. ([Submit Procedure])
+2. Install all dependencies: `go mod download`.
+3. If you've added code that should be tested, add tests and ensure they pass: `go test ./...`.
+4. Ensure your code lints (consistency is key): `golangci-lint run`.
+5. Submit a pull request against `main`.

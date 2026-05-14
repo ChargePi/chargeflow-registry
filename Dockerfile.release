@@ -1,0 +1,19 @@
+FROM alpine:3.21
+
+ARG TARGETPLATFORM
+ARG GRPC_HEALTH_PROBE_VERSION=v0.4.34
+ARG user=app
+ARG group=docker
+
+RUN apk add --no-cache curl ca-certificates wget && \
+    wget -qO /usr/local/bin/grpc_health_probe \
+      "https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')" && \
+    chmod +x /usr/local/bin/grpc_health_probe && \
+    addgroup -S $group && adduser -S -G $group $user
+
+USER $user
+WORKDIR /usr/local/bin
+
+COPY --chown=$user:$group $TARGETPLATFORM/chargeflow-registry /usr/local/bin/chargeflow-registry
+
+CMD ["/usr/local/bin/chargeflow-registry"]

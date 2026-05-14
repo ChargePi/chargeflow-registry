@@ -6,7 +6,7 @@ managed:
   enabled: true
   override:
     - file_option: go_package_prefix
-      value: github.com/ChargePi
+      value: github.com/ChargePi/chargeflow-registry/gen/proto
 
 inputs:
   - directory: ./proto

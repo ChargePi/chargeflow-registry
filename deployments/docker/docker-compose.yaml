@@ -1,0 +1,77 @@
+services:
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-registry}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-registry}
+      POSTGRES_DB: ${POSTGRES_DB:-registry}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-registry}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  migrate:
+    image: postgres:17-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ../../deployments/migrations:/migrations
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-registry}
+    command: >
+      sh -c "for f in $(ls /migrations/*.sql | sort); do
+        echo \"Applying $$f\"; psql -h postgres -U ${POSTGRES_USER:-registry} -d ${POSTGRES_DB:-registry} -f $$f; done"
+    restart: on-failure
+
+  chargeflow-registry:
+    build:
+      context: ../../
+      dockerfile: build/Dockerfile
+      target: app
+      ssh:
+        - default
+        - ssh=~/.ssh/id_ed25519
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "50051:50051" # gRPC port
+      - "8080:8080" # MCP port
+    environment:
+      CHARGEFLOW_REGISTRY_DATABASE_DSN: postgres://${POSTGRES_USER:-registry}:${POSTGRES_PASSWORD:-registry}@postgres:5432/${POSTGRES_DB:-registry}?sslmode=disable
+      CHARGEFLOW_REGISTRY_REDIS_ADDRESS: redis:6379
+      CHARGEFLOW_REGISTRY_REDIS_CACHETTL: ${REDIS_CACHE_TTL:-1h}
+      CHARGEFLOW_REGISTRY_GRPC_ADDRESS: :50051
+      CHARGEFLOW_REGISTRY_MCP_ADDRESS: :8080
+      CHARGEFLOW_REGISTRY_AUTH_JWTSECRET: ${JWT_SECRET:-b5027f32b0bbfa91328e5e428f85b96f3130b431f4182e5c90761a01270e66a9}
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:50051"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres:

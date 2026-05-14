@@ -4,7 +4,6 @@ on:
     branches:
       - master
       - main
-      - staging
     paths-ignore:
       - 'docs/**'
       - '.run/**'
@@ -20,7 +19,6 @@ on:
     branches:
       - master
       - main
-      - staging
     paths-ignore:
       - 'docs/**'
       - '.run/**'
@@ -45,7 +43,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.23.0
+          go-version: 1.26.0
 
         # todo skip mocks coverage
       - name: Install dependencies and run tests
@@ -69,7 +67,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.23.0
+          go-version: 1.26.0
 
       - name: Install dependencies and run tests
         run: |

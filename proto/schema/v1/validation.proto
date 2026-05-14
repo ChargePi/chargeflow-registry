@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package schema.v1;
+
+import "schema/v1/schema.proto";
+
+message ValidationViolation {
+  string field = 1;
+  string message = 2;
+}
+
+message ValidateMessageRequest {
+  OcppVersion ocpp_version = 1;
+  string action = 2;
+  MessageType message_type = 3;
+  optional string vendor = 4;
+  optional string model = 5;
+  bytes message = 6;
+}
+
+message ValidateMessageResponse {
+  bool valid = 1;
+  repeated ValidationViolation violations = 2;
+}
+
+service SchemaValidationService {
+  rpc ValidateMessage(ValidateMessageRequest) returns (ValidateMessageResponse);
+}
