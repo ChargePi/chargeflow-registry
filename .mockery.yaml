@@ -4,4 +4,14 @@ mockname: "Mock{{.InterfaceName}}"
 outpkg: "{{.PackageName}}"
 filename: "{{.InterfaceName|snakecase}}_mock.go"
 packages:
-#todo
+  github.com/ChargePi/chargeflow-registry/internal/schema:
+    interfaces:
+      Repository:
+      Cache:
+  github.com/ChargePi/chargeflow-registry/internal/grpc:
+    interfaces:
+      SchemaService:
+      ValidationService:
+  github.com/ChargePi/chargeflow-registry/internal/validation:
+    interfaces:
+      SchemaGetter:

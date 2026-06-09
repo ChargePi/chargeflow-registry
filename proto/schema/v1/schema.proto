@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package schema.v1;
+
+import "google/protobuf/timestamp.proto";
+
+enum OcppVersion {
+  OCPP_VERSION_UNSPECIFIED = 0;
+  OCPP_VERSION_16 = 1;
+  OCPP_VERSION_201 = 2;
+  OCPP_VERSION_21 = 3;
+}
+
+enum MessageType {
+  MESSAGE_TYPE_UNSPECIFIED = 0;
+  MESSAGE_TYPE_REQUEST = 1;
+  MESSAGE_TYPE_RESPONSE = 2;
+}
+
+message Schema {
+  string id = 1;
+  OcppVersion ocpp_version = 2;
+  string action = 3;
+  MessageType message_type = 4;
+  optional string vendor = 5;
+  optional string model = 6;
+  bytes schema = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+// AddSchemaRequest creates both the request and response schemas for an action in one call.
+message AddSchemaRequest {
+  OcppVersion ocpp_version = 1;
+  string action = 2;
+  optional string vendor = 3;
+  optional string model = 4;
+  bytes request_schema = 5;
+  bytes response_schema = 6;
+}
+
+message AddSchemaResponse {}
+
+// UpsertSchemaRequest updates either the request or response schema for an action.
+message UpsertSchemaRequest {
+  OcppVersion ocpp_version = 1;
+  string action = 2;
+  MessageType message_type = 3;
+  optional string vendor = 4;
+  optional string model = 5;
+  bytes schema = 6;
+}
+
+message UpsertSchemaResponse {}
+
+// DeleteSchemaRequest removes both the request and response schemas for an action.
+message DeleteSchemaRequest {
+  OcppVersion ocpp_version = 1;
+  string action = 2;
+  optional string vendor = 3;
+  optional string model = 4;
+}
+
+message DeleteSchemaResponse {}
+
+service SchemaRegistryService {
+  rpc AddSchema(AddSchemaRequest) returns (AddSchemaResponse);
+  rpc UpsertSchema(UpsertSchemaRequest) returns (UpsertSchemaResponse);
+  rpc DeleteSchema(DeleteSchemaRequest) returns (DeleteSchemaResponse);
+}
