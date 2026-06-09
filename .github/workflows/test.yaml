@@ -45,8 +45,13 @@ jobs:
         with:
           go-version: 1.26.0
 
+      - name: Configure git for private modules
+        run: git config --global url."https://x-access-token:${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+
         # todo skip mocks coverage
       - name: Install dependencies and run tests
+        env:
+          GOPRIVATE: github.com/ChargePi/*
         run: |
           go mod download
           go test -v ./... -coverpkg=./... -short -coverprofile=unit_coverage.out
@@ -69,7 +74,12 @@ jobs:
         with:
           go-version: 1.26.0
 
+      - name: Configure git for private modules
+        run: git config --global url."https://x-access-token:${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+
       - name: Install dependencies and run tests
+        env:
+          GOPRIVATE: github.com/ChargePi/*
         run: |
           go mod download
           go test -v -run 'Integration$' ./... -coverpkg=./... -coverprofile=integration_coverage.out

@@ -8,17 +8,13 @@ ENV CGO_ENABLED=0
 ENV GOOS=linux
 ENV GOPRIVATE=github.com/ChargePi/*
 
-# Configure SSH for private module access
-RUN apt-get update && apt-get install -y openssh-client git
-
 # Leverage build cache by copying go.mod and go.sum first
 COPY go.mod go.sum ./
 
-RUN git config --global url.git@github.com:ChargePi.insteadOf https://github.com/ChargePi && \
-    mkdir -p -m 0600 $HOME/.ssh && \
-    ssh-keyscan -H github.com >>$HOME/.ssh/known_hosts
-
-RUN --mount=type=ssh --mount=type=cache,target="/root/.cache/go-build" go mod download && go mod verify
+RUN --mount=type=secret,id=gh_token,required=true \
+    --mount=type=cache,target="/root/.cache/go-build" \
+    git config --global url."https://x-access-token:$(cat /run/secrets/gh_token)@github.com/".insteadOf "https://github.com/" && \
+    go mod download && go mod verify
 
 # Copy the rest of the source code
 COPY . .
