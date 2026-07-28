@@ -10,6 +10,7 @@ import (
 	"github.com/ChargePi/chargeflow-registry/internal/validation"
 	mcplib "github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/samber/lo"
 )
 
 func registerTools(s *server.MCPServer, h *handlers) {
@@ -258,7 +259,8 @@ func (h *handlers) querySchemas(ctx context.Context, req mcplib.CallToolRequest)
 	vendor := optionalString(req.GetArguments()["vendor"])
 	model := optionalString(req.GetArguments()["model"])
 
-	schemas, err := h.schemaSvc.List(ctx, schema.OCPPVersion(versionStr), vendor, model)
+	// The MCP API is user-facing, so only admin-verified schemas are ever listed here.
+	schemas, _, err := h.schemaSvc.List(ctx, schema.OCPPVersion(versionStr), vendor, model, lo.ToPtr(schema.StatusVerified), schema.MaxPageSize, 0)
 	if err != nil {
 		return mcplib.NewToolResultError(fmt.Sprintf("failed to query schemas: %s", err)), nil
 	}

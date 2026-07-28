@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package admin.v1;
+
+import "schema/v1/schema.proto";
+
+// ListSchemasRequest filters schemas by admin review status.
+message ListSchemasRequest {
+  // Optional status filter. SCHEMA_STATUS_UNSPECIFIED matches schemas in any status.
+  schema.v1.SchemaStatus status = 1;
+  // Max results per page. <= 0 applies the server default (50), capped at 200.
+  int32 page_size = 2;
+  // Opaque cursor from a previous ListSchemasResponse.next_page_token. Omit
+  // to fetch the first page.
+  string page_token = 3;
+}
+
+message ListSchemasResponse {
+  repeated schema.v1.Schema schemas = 1;
+  // Total number of schemas matching the filter, ignoring pagination.
+  int64 total_size = 2;
+  // Pass as ListSchemasRequest.page_token to fetch the next page. Empty when
+  // this is the last page.
+  string next_page_token = 3;
+}
+
+// ChangeStatusRequest applies an admin decision to a schema. status must be
+// SCHEMA_STATUS_VERIFIED or SCHEMA_STATUS_REJECTED.
+message ChangeStatusRequest {
+  string schema_id = 1;
+  schema.v1.SchemaStatus status = 2;
+}
+
+message ChangeStatusResponse {
+  schema.v1.Schema schema = 1;
+}
+
+// AdminService lets an operator review schemas submitted to the registry.
+service AdminService {
+  rpc ListSchemas(ListSchemasRequest) returns (ListSchemasResponse);
+  rpc ChangeStatus(ChangeStatusRequest) returns (ChangeStatusResponse);
+}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -124,19 +125,52 @@ func (s *Service) deleteOne(ctx context.Context, version OCPPVersion, action str
 	return nil
 }
 
-func (s *Service) List(ctx context.Context, version OCPPVersion, vendor, model *string) ([]*Schema, error) {
+// List returns schemas matching the given filters, paginated. An empty version,
+// nil vendor/model, or nil status is treated as "any" for that field.
+func (s *Service) List(ctx context.Context, version OCPPVersion, vendor, model *string, status *Status, limit, offset uint32) ([]*Schema, int64, error) {
 	ctx, span := tracer.Start(ctx, "schema.List", trace.WithAttributes(
 		ocppVersionAttr(version),
 	))
 	defer span.End()
 
-	schemas, err := s.repo.List(ctx, version, vendor, model)
+	schemas, total, err := s.repo.List(ctx, version, vendor, model, status, clampPageSize(limit), offset)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		return nil, fmt.Errorf("list schemas: %w", err)
+		return nil, 0, fmt.Errorf("list schemas: %w", err)
 	}
-	return schemas, nil
+	return schemas, total, nil
+}
+
+// ChangeStatus applies an admin decision to a schema, invalidating its cache entry
+// so the next Get reflects the new status.
+func (s *Service) ChangeStatus(ctx context.Context, id uuid.UUID, status Status) (*Schema, error) {
+	ctx, span := tracer.Start(ctx, "schema.ChangeStatus")
+	defer span.End()
+
+	sc, err := s.repo.UpdateStatus(ctx, id, status)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, fmt.Errorf("change schema status: %w", err)
+	}
+
+	// Verifying doesn't change the schema's content, so a cached copy stays valid.
+	// Rejection means the schema should stop being served, so evict it.
+	if status == StatusRejected {
+		_ = s.cache.Delete(ctx, cacheKey(sc.OCPPVersion, sc.Action, sc.MessageType, sc.Vendor, sc.Model))
+	}
+	return sc, nil
+}
+
+func clampPageSize(limit uint32) uint32 {
+	if limit == 0 {
+		return DefaultPageSize
+	}
+	if limit > MaxPageSize {
+		return MaxPageSize
+	}
+	return limit
 }
 
 func (s *Service) Upsert(ctx context.Context, sc *Schema) error {

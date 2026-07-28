@@ -58,12 +58,14 @@ services:
         condition: service_completed_successfully
     ports:
       - "50051:50051" # gRPC port
+      - "50052:50052" # Admin gRPC port
       - "8080:8080" # MCP port
     environment:
       CHARGEFLOW_REGISTRY_DATABASE_DSN: postgres://${POSTGRES_USER:-registry}:${POSTGRES_PASSWORD:-registry}@postgres:5432/${POSTGRES_DB:-registry}?sslmode=disable
       CHARGEFLOW_REGISTRY_REDIS_ADDRESS: redis:6379
       CHARGEFLOW_REGISTRY_REDIS_CACHETTL: ${REDIS_CACHE_TTL:-1h}
       CHARGEFLOW_REGISTRY_GRPC_ADDRESS: :50051
+      CHARGEFLOW_REGISTRY_ADMIN_GRPC_ADDRESS: :50052
       CHARGEFLOW_REGISTRY_MCP_ADDRESS: :8080
       CHARGEFLOW_REGISTRY_AUTH_JWTSECRET: ${JWT_SECRET:-b5027f32b0bbfa91328e5e428f85b96f3130b431f4182e5c90761a01270e66a9}
     healthcheck:

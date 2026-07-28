@@ -54,6 +54,32 @@ func messageTypeToProto(t schema.MessageType) schemav1.MessageType {
 	}
 }
 
+func schemaStatusToDomain(s schemav1.SchemaStatus) schema.Status {
+	switch s {
+	case schemav1.SchemaStatus_SCHEMA_STATUS_SUBMITTED:
+		return schema.StatusSubmitted
+	case schemav1.SchemaStatus_SCHEMA_STATUS_VERIFIED:
+		return schema.StatusVerified
+	case schemav1.SchemaStatus_SCHEMA_STATUS_REJECTED:
+		return schema.StatusRejected
+	default:
+		return ""
+	}
+}
+
+func schemaStatusToProto(s schema.Status) schemav1.SchemaStatus {
+	switch s {
+	case schema.StatusSubmitted:
+		return schemav1.SchemaStatus_SCHEMA_STATUS_SUBMITTED
+	case schema.StatusVerified:
+		return schemav1.SchemaStatus_SCHEMA_STATUS_VERIFIED
+	case schema.StatusRejected:
+		return schemav1.SchemaStatus_SCHEMA_STATUS_REJECTED
+	default:
+		return schemav1.SchemaStatus_SCHEMA_STATUS_UNSPECIFIED
+	}
+}
+
 func schemaToProto(s *schema.Schema) *schemav1.Schema {
 	return &schemav1.Schema{
 		Id:          s.ID.String(),
@@ -65,5 +91,14 @@ func schemaToProto(s *schema.Schema) *schemav1.Schema {
 		Schema:      s.Schema,
 		CreatedAt:   timestamppb.New(s.CreatedAt),
 		UpdatedAt:   timestamppb.New(s.UpdatedAt),
+		Status:      schemaStatusToProto(s.Status),
 	}
+}
+
+func schemasToProto(schemas []*schema.Schema) []*schemav1.Schema {
+	out := make([]*schemav1.Schema, len(schemas))
+	for i, s := range schemas {
+		out[i] = schemaToProto(s)
+	}
+	return out
 }

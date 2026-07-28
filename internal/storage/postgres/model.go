@@ -16,6 +16,7 @@ type schemaEntity struct {
 	Vendor      *string         `gorm:"column:vendor;index:idx_schemas_vendor_model,priority:1;index:idx_schemas_lookup,priority:4"`
 	Model       *string         `gorm:"column:model;index:idx_schemas_vendor_model,priority:2;index:idx_schemas_lookup,priority:5"`
 	Schema      json.RawMessage `gorm:"column:schema;type:jsonb;not null"`
+	Status      string          `gorm:"column:status;not null;default:submitted;index:idx_schemas_status"`
 	CreatedAt   time.Time       `gorm:"column:created_at;autoCreateTime"`
 	UpdatedAt   time.Time       `gorm:"column:updated_at;autoUpdateTime"`
 }
@@ -33,6 +34,7 @@ func toEntity(s *schema.Schema) *schemaEntity {
 		Vendor:      s.Vendor,
 		Model:       s.Model,
 		Schema:      s.Schema,
+		Status:      string(s.Status),
 		CreatedAt:   s.CreatedAt,
 		UpdatedAt:   s.UpdatedAt,
 	}
@@ -47,6 +49,7 @@ func toDomain(e *schemaEntity) *schema.Schema {
 		Vendor:      e.Vendor,
 		Model:       e.Model,
 		Schema:      e.Schema,
+		Status:      schema.Status(e.Status),
 		CreatedAt:   e.CreatedAt,
 		UpdatedAt:   e.UpdatedAt,
 	}
