@@ -19,6 +19,7 @@ import (
 	"github.com/ChargePi/chargeflow-registry/internal/validation"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	"github.com/redis/go-redis/extra/redisotel-native/v9"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -75,6 +76,16 @@ var (
 			if err := db.Use(otelgorm.NewPlugin()); err != nil {
 				logger.Fatal("failed to setup postgres tracing", zap.Error(err))
 			}
+
+			redisObs := redisotel.GetObservabilityInstance()
+			if err := redisObs.Init(redisotel.NewConfig().WithEnabled(true)); err != nil {
+				logger.Fatal("failed to setup redis observability", zap.Error(err))
+			}
+			defer func() {
+				if err := redisObs.Shutdown(); err != nil {
+					logger.Error("failed to shut down redis observability", zap.Error(err))
+				}
+			}()
 
 			redisClient := redis.NewClient(&redis.Options{
 				Addr:     cfg.Redis.Address,
