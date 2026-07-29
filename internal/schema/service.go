@@ -164,20 +164,20 @@ func (s *Service) ChangeStatus(ctx context.Context, id uuid.UUID, status Status)
 }
 
 // ListVendorModels returns the OCPP version/vendor/model combinations available
-// for vendor, optionally filtered to models.
-func (s *Service) ListVendorModels(ctx context.Context, vendor string, models []string) ([]*VendorModel, error) {
+// for vendor, optionally filtered to models, paginated.
+func (s *Service) ListVendorModels(ctx context.Context, vendor string, models []string, limit, offset uint32) ([]*VendorModel, int64, error) {
 	ctx, span := tracer.Start(ctx, "schema.ListVendorModels", trace.WithAttributes(
 		vendorAttr(vendor),
 	))
 	defer span.End()
 
-	vendorModels, err := s.repo.ListVendorModels(ctx, vendor, models)
+	vendorModels, total, err := s.repo.ListVendorModels(ctx, vendor, models, clampPageSize(limit), offset)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		return nil, fmt.Errorf("list vendor models: %w", err)
+		return nil, 0, fmt.Errorf("list vendor models: %w", err)
 	}
-	return vendorModels, nil
+	return vendorModels, total, nil
 }
 
 func clampPageSize(limit uint32) uint32 {

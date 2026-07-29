@@ -128,10 +128,10 @@ func (r *SchemaRepository) Upsert(ctx context.Context, s *schema.Schema) error {
 }
 
 // ListVendorModels returns the distinct OCPP version/vendor/model combinations for
-// verified schemas belonging to vendor, optionally filtered to models. Entries
-// without a model (generic vendor-only schemas) are excluded, since these
+// verified schemas belonging to vendor, optionally filtered to models, paginated.
+// Entries without a model (generic vendor-only schemas) are excluded, since these
 // represent hardware charge point models rather than CSMS vendors.
-func (r *SchemaRepository) ListVendorModels(ctx context.Context, vendor string, models []string) ([]*schema.VendorModel, error) {
+func (r *SchemaRepository) ListVendorModels(ctx context.Context, vendor string, models []string, limit, offset uint32) ([]*schema.VendorModel, int64, error) {
 	query := r.db.WithContext(ctx).Model(&schemaEntity{}).
 		Distinct("ocpp_version", "vendor", "model").
 		Where("vendor = ? AND model IS NOT NULL AND status = ?", vendor, string(schema.StatusVerified))
@@ -139,12 +139,17 @@ func (r *SchemaRepository) ListVendorModels(ctx context.Context, vendor string, 
 		query = query.Where("model IN ?", models)
 	}
 
-	var entities []*schemaEntity
-	if err := query.Order("ocpp_version, model").Find(&entities).Error; err != nil {
-		return nil, fmt.Errorf("list vendor models: %w", err)
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("count vendor models: %w", err)
 	}
-	if len(entities) == 0 {
-		return nil, schema.ErrNotFound
+	if total == 0 {
+		return nil, 0, schema.ErrNotFound
+	}
+
+	var entities []*schemaEntity
+	if err := query.Order("ocpp_version, model").Limit(int(limit)).Offset(int(offset)).Find(&entities).Error; err != nil {
+		return nil, 0, fmt.Errorf("list vendor models: %w", err)
 	}
 
 	vendorModels := make([]*schema.VendorModel, len(entities))
@@ -156,7 +161,7 @@ func (r *SchemaRepository) ListVendorModels(ctx context.Context, vendor string, 
 		}
 	}
 
-	return vendorModels, nil
+	return vendorModels, total, nil
 }
 
 func (r *SchemaRepository) Delete(ctx context.Context, version schema.OCPPVersion, action string, msgType schema.MessageType, vendor, model *string) error {

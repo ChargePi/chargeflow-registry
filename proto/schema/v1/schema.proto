@@ -84,10 +84,20 @@ message ListVendorModelsRequest {
   string vendor = 1;
   // Optional list of models to filter by. Empty matches any model.
   repeated string models = 2;
+  // Max results per page. <= 0 applies the server default (50), capped at 200.
+  int32 page_size = 3;
+  // Opaque cursor from a previous ListVendorModelsResponse.next_page_token.
+  // Omit to fetch the first page.
+  string page_token = 4;
 }
 
 message ListVendorModelsResponse {
   repeated VendorModel vendor_models = 1;
+  // Total number of vendor/model combinations matching the filter, ignoring pagination.
+  int64 total_size = 2;
+  // Pass as ListVendorModelsRequest.page_token to fetch the next page. Empty
+  // when this is the last page.
+  string next_page_token = 3;
 }
 
 service SchemaRegistryService {

@@ -705,7 +705,12 @@ type ListVendorModelsRequest struct {
 	state  protoimpl.MessageState `protogen:"open.v1"`
 	Vendor string                 `protobuf:"bytes,1,opt,name=vendor,proto3" json:"vendor,omitempty"`
 	// Optional list of models to filter by. Empty matches any model.
-	Models        []string `protobuf:"bytes,2,rep,name=models,proto3" json:"models,omitempty"`
+	Models []string `protobuf:"bytes,2,rep,name=models,proto3" json:"models,omitempty"`
+	// Max results per page. <= 0 applies the server default (50), capped at 200.
+	PageSize int32 `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	// Opaque cursor from a previous ListVendorModelsResponse.next_page_token.
+	// Omit to fetch the first page.
+	PageToken     string `protobuf:"bytes,4,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -754,9 +759,28 @@ func (x *ListVendorModelsRequest) GetModels() []string {
 	return nil
 }
 
+func (x *ListVendorModelsRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *ListVendorModelsRequest) GetPageToken() string {
+	if x != nil {
+		return x.PageToken
+	}
+	return ""
+}
+
 type ListVendorModelsResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	VendorModels  []*VendorModel         `protobuf:"bytes,1,rep,name=vendor_models,json=vendorModels,proto3" json:"vendor_models,omitempty"`
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	VendorModels []*VendorModel         `protobuf:"bytes,1,rep,name=vendor_models,json=vendorModels,proto3" json:"vendor_models,omitempty"`
+	// Total number of vendor/model combinations matching the filter, ignoring pagination.
+	TotalSize int64 `protobuf:"varint,2,opt,name=total_size,json=totalSize,proto3" json:"total_size,omitempty"`
+	// Pass as ListVendorModelsRequest.page_token to fetch the next page. Empty
+	// when this is the last page.
+	NextPageToken string `protobuf:"bytes,3,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -796,6 +820,20 @@ func (x *ListVendorModelsResponse) GetVendorModels() []*VendorModel {
 		return x.VendorModels
 	}
 	return nil
+}
+
+func (x *ListVendorModelsResponse) GetTotalSize() int64 {
+	if x != nil {
+		return x.TotalSize
+	}
+	return 0
+}
+
+func (x *ListVendorModelsResponse) GetNextPageToken() string {
+	if x != nil {
+		return x.NextPageToken
+	}
+	return ""
 }
 
 var File_schema_v1_schema_proto protoreflect.FileDescriptor
@@ -850,12 +888,18 @@ const file_schema_v1_schema_proto_rawDesc = "" +
 	"\vVendorModel\x129\n" +
 	"\focpp_version\x18\x01 \x01(\x0e2\x16.schema.v1.OcppVersionR\vocppVersion\x12\x16\n" +
 	"\x06vendor\x18\x02 \x01(\tR\x06vendor\x12\x14\n" +
-	"\x05model\x18\x03 \x01(\tR\x05model\"I\n" +
+	"\x05model\x18\x03 \x01(\tR\x05model\"\x85\x01\n" +
 	"\x17ListVendorModelsRequest\x12\x16\n" +
 	"\x06vendor\x18\x01 \x01(\tR\x06vendor\x12\x16\n" +
-	"\x06models\x18\x02 \x03(\tR\x06models\"W\n" +
+	"\x06models\x18\x02 \x03(\tR\x06models\x12\x1b\n" +
+	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\x12\x1d\n" +
+	"\n" +
+	"page_token\x18\x04 \x01(\tR\tpageToken\"\x9e\x01\n" +
 	"\x18ListVendorModelsResponse\x12;\n" +
-	"\rvendor_models\x18\x01 \x03(\v2\x16.schema.v1.VendorModelR\fvendorModels*k\n" +
+	"\rvendor_models\x18\x01 \x03(\v2\x16.schema.v1.VendorModelR\fvendorModels\x12\x1d\n" +
+	"\n" +
+	"total_size\x18\x02 \x01(\x03R\ttotalSize\x12&\n" +
+	"\x0fnext_page_token\x18\x03 \x01(\tR\rnextPageToken*k\n" +
 	"\vOcppVersion\x12\x1c\n" +
 	"\x18OCPP_VERSION_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fOCPP_VERSION_16\x10\x01\x12\x14\n" +

@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	schemav1 "github.com/ChargePi/chargeflow-registry/gen/proto/schema/v1"
+	"github.com/ChargePi/chargeflow-registry/internal/pagination"
 	"github.com/ChargePi/chargeflow-registry/internal/schema"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -14,7 +15,7 @@ type SchemaService interface {
 	AddPair(ctx context.Context, req, resp *schema.Schema) error
 	Upsert(ctx context.Context, s *schema.Schema) error
 	Delete(ctx context.Context, version schema.OCPPVersion, action string, vendor, model *string) error
-	ListVendorModels(ctx context.Context, vendor string, models []string) ([]*schema.VendorModel, error)
+	ListVendorModels(ctx context.Context, vendor string, models []string, limit, offset uint32) ([]*schema.VendorModel, int64, error)
 }
 
 type Handler struct {
@@ -152,7 +153,13 @@ func (h *Handler) ListVendorModels(ctx context.Context, req *schemav1.ListVendor
 		return nil, status.Error(codes.InvalidArgument, "vendor is required")
 	}
 
-	vendorModels, err := h.service.ListVendorModels(ctx, req.Vendor, req.Models)
+	offset, err := pagination.DecodeOffset(req.PageToken)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid page_token")
+	}
+	limit := pagination.ClampPageSize(int(req.PageSize), schema.DefaultPageSize, schema.MaxPageSize)
+
+	vendorModels, total, err := h.service.ListVendorModels(ctx, req.Vendor, req.Models, limit, offset)
 	if err != nil {
 		if errors.Is(err, schema.ErrNotFound) {
 			return nil, status.Error(codes.NotFound, "no models found for vendor")
@@ -160,5 +167,9 @@ func (h *Handler) ListVendorModels(ctx context.Context, req *schemav1.ListVendor
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &schemav1.ListVendorModelsResponse{VendorModels: vendorModelsToProto(vendorModels)}, nil
+	return &schemav1.ListVendorModelsResponse{
+		VendorModels:  vendorModelsToProto(vendorModels),
+		TotalSize:     total,
+		NextPageToken: pagination.NextToken(offset, len(vendorModels), total),
+	}, nil
 }

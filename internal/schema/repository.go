@@ -36,8 +36,10 @@ type Repository interface {
 	// updated schema. Returns ErrNotFound if no schema with that ID exists.
 	UpdateStatus(ctx context.Context, id uuid.UUID, status Status) (*Schema, error)
 	// ListVendorModels returns the distinct OCPP version/vendor/model combinations
-	// for verified schemas belonging to vendor, optionally filtered to models.
-	ListVendorModels(ctx context.Context, vendor string, models []string) ([]*VendorModel, error)
+	// for verified schemas belonging to vendor, optionally filtered to models,
+	// paginated. Returns the page of results plus the total count of matching
+	// combinations, ignoring limit/offset.
+	ListVendorModels(ctx context.Context, vendor string, models []string, limit, offset uint32) ([]*VendorModel, int64, error)
 }
 
 type Cache interface {
