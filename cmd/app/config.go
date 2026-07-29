@@ -17,10 +17,6 @@ type RedisConfiguration struct {
 	CacheTTL time.Duration `json:"cacheTtl" yaml:"cacheTtl" mapstructure:"cacheTtl"`
 }
 
-type AuthConfiguration struct {
-	JWTSecret string `json:"jwtSecret" yaml:"jwtSecret" mapstructure:"jwtSecret" validate:"required"`
-}
-
 type GRPCConfiguration struct {
 	Address string `json:"address" yaml:"address" mapstructure:"address" validate:"required"`
 }
@@ -40,6 +36,5 @@ type Configuration struct {
 	Observability observability.Config   `json:"observability" yaml:"observability" mapstructure:"observability" validate:"required"`
 	GRPC          GRPCConfiguration      `json:"grpc"          yaml:"grpc"          mapstructure:"grpc"          validate:"required"`
 	AdminGRPC     AdminGRPCConfiguration `json:"adminGrpc"     yaml:"adminGrpc"     mapstructure:"adminGrpc"     validate:"required"`
-	Auth          AuthConfiguration      `json:"auth"          yaml:"auth"          mapstructure:"auth"          validate:"required"`
 	MCP           MCPConfiguration       `json:"mcp"           yaml:"mcp"           mapstructure:"mcp"           validate:"required"`
 }
