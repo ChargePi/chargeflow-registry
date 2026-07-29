@@ -836,6 +836,168 @@ func (x *ListVendorModelsResponse) GetNextPageToken() string {
 	return ""
 }
 
+// SearchSchemasRequest searches verified schemas, optionally filtered by OCPP
+// version, vendor, model, action, and message type.
+type SearchSchemasRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Optional OCPP version filter. Unspecified matches any version.
+	OcppVersion *OcppVersion `protobuf:"varint,1,opt,name=ocpp_version,json=ocppVersion,proto3,enum=schema.v1.OcppVersion,oneof" json:"ocpp_version,omitempty"`
+	Vendor      *string      `protobuf:"bytes,2,opt,name=vendor,proto3,oneof" json:"vendor,omitempty"`
+	Model       *string      `protobuf:"bytes,3,opt,name=model,proto3,oneof" json:"model,omitempty"`
+	Action      *string      `protobuf:"bytes,4,opt,name=action,proto3,oneof" json:"action,omitempty"`
+	// Optional message direction filter. Unspecified returns both request and response schemas.
+	MessageType MessageType `protobuf:"varint,5,opt,name=message_type,json=messageType,proto3,enum=schema.v1.MessageType" json:"message_type,omitempty"`
+	// Max results per page. <= 0 applies the server default (50), capped at 200.
+	PageSize int32 `protobuf:"varint,6,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	// Opaque cursor from a previous SearchSchemasResponse.next_page_token.
+	// Omit to fetch the first page.
+	PageToken     string `protobuf:"bytes,7,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SearchSchemasRequest) Reset() {
+	*x = SearchSchemasRequest{}
+	mi := &file_schema_v1_schema_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SearchSchemasRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SearchSchemasRequest) ProtoMessage() {}
+
+func (x *SearchSchemasRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_schema_v1_schema_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SearchSchemasRequest.ProtoReflect.Descriptor instead.
+func (*SearchSchemasRequest) Descriptor() ([]byte, []int) {
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *SearchSchemasRequest) GetOcppVersion() OcppVersion {
+	if x != nil && x.OcppVersion != nil {
+		return *x.OcppVersion
+	}
+	return OcppVersion_OCPP_VERSION_UNSPECIFIED
+}
+
+func (x *SearchSchemasRequest) GetVendor() string {
+	if x != nil && x.Vendor != nil {
+		return *x.Vendor
+	}
+	return ""
+}
+
+func (x *SearchSchemasRequest) GetModel() string {
+	if x != nil && x.Model != nil {
+		return *x.Model
+	}
+	return ""
+}
+
+func (x *SearchSchemasRequest) GetAction() string {
+	if x != nil && x.Action != nil {
+		return *x.Action
+	}
+	return ""
+}
+
+func (x *SearchSchemasRequest) GetMessageType() MessageType {
+	if x != nil {
+		return x.MessageType
+	}
+	return MessageType_MESSAGE_TYPE_UNSPECIFIED
+}
+
+func (x *SearchSchemasRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *SearchSchemasRequest) GetPageToken() string {
+	if x != nil {
+		return x.PageToken
+	}
+	return ""
+}
+
+type SearchSchemasResponse struct {
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	Schemas []*Schema              `protobuf:"bytes,1,rep,name=schemas,proto3" json:"schemas,omitempty"`
+	// Total number of verified schemas matching the filter, ignoring pagination.
+	TotalSize int64 `protobuf:"varint,2,opt,name=total_size,json=totalSize,proto3" json:"total_size,omitempty"`
+	// Pass as SearchSchemasRequest.page_token to fetch the next page. Empty
+	// when this is the last page.
+	NextPageToken string `protobuf:"bytes,3,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SearchSchemasResponse) Reset() {
+	*x = SearchSchemasResponse{}
+	mi := &file_schema_v1_schema_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SearchSchemasResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SearchSchemasResponse) ProtoMessage() {}
+
+func (x *SearchSchemasResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_schema_v1_schema_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SearchSchemasResponse.ProtoReflect.Descriptor instead.
+func (*SearchSchemasResponse) Descriptor() ([]byte, []int) {
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *SearchSchemasResponse) GetSchemas() []*Schema {
+	if x != nil {
+		return x.Schemas
+	}
+	return nil
+}
+
+func (x *SearchSchemasResponse) GetTotalSize() int64 {
+	if x != nil {
+		return x.TotalSize
+	}
+	return 0
+}
+
+func (x *SearchSchemasResponse) GetNextPageToken() string {
+	if x != nil {
+		return x.NextPageToken
+	}
+	return ""
+}
+
 var File_schema_v1_schema_proto protoreflect.FileDescriptor
 
 const file_schema_v1_schema_proto_rawDesc = "" +
@@ -899,6 +1061,24 @@ const file_schema_v1_schema_proto_rawDesc = "" +
 	"\rvendor_models\x18\x01 \x03(\v2\x16.schema.v1.VendorModelR\fvendorModels\x12\x1d\n" +
 	"\n" +
 	"total_size\x18\x02 \x01(\x03R\ttotalSize\x12&\n" +
+	"\x0fnext_page_token\x18\x03 \x01(\tR\rnextPageToken\"\xd3\x02\n" +
+	"\x14SearchSchemasRequest\x12>\n" +
+	"\focpp_version\x18\x01 \x01(\x0e2\x16.schema.v1.OcppVersionH\x00R\vocppVersion\x88\x01\x01\x12\x1b\n" +
+	"\x06vendor\x18\x02 \x01(\tH\x01R\x06vendor\x88\x01\x01\x12\x19\n" +
+	"\x05model\x18\x03 \x01(\tH\x02R\x05model\x88\x01\x01\x12\x1b\n" +
+	"\x06action\x18\x04 \x01(\tH\x03R\x06action\x88\x01\x01\x129\n" +
+	"\fmessage_type\x18\x05 \x01(\x0e2\x16.schema.v1.MessageTypeR\vmessageType\x12\x1b\n" +
+	"\tpage_size\x18\x06 \x01(\x05R\bpageSize\x12\x1d\n" +
+	"\n" +
+	"page_token\x18\a \x01(\tR\tpageTokenB\x0f\n" +
+	"\r_ocpp_versionB\t\n" +
+	"\a_vendorB\b\n" +
+	"\x06_modelB\t\n" +
+	"\a_action\"\x8b\x01\n" +
+	"\x15SearchSchemasResponse\x12+\n" +
+	"\aschemas\x18\x01 \x03(\v2\x11.schema.v1.SchemaR\aschemas\x12\x1d\n" +
+	"\n" +
+	"total_size\x18\x02 \x01(\x03R\ttotalSize\x12&\n" +
 	"\x0fnext_page_token\x18\x03 \x01(\tR\rnextPageToken*k\n" +
 	"\vOcppVersion\x12\x1c\n" +
 	"\x18OCPP_VERSION_UNSPECIFIED\x10\x00\x12\x13\n" +
@@ -913,12 +1093,13 @@ const file_schema_v1_schema_proto_rawDesc = "" +
 	"\x19SCHEMA_STATUS_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17SCHEMA_STATUS_SUBMITTED\x10\x01\x12\x1a\n" +
 	"\x16SCHEMA_STATUS_VERIFIED\x10\x02\x12\x1a\n" +
-	"\x16SCHEMA_STATUS_REJECTED\x10\x032\xde\x02\n" +
+	"\x16SCHEMA_STATUS_REJECTED\x10\x032\xb2\x03\n" +
 	"\x15SchemaRegistryService\x12F\n" +
 	"\tAddSchema\x12\x1b.schema.v1.AddSchemaRequest\x1a\x1c.schema.v1.AddSchemaResponse\x12O\n" +
 	"\fUpsertSchema\x12\x1e.schema.v1.UpsertSchemaRequest\x1a\x1f.schema.v1.UpsertSchemaResponse\x12O\n" +
 	"\fDeleteSchema\x12\x1e.schema.v1.DeleteSchemaRequest\x1a\x1f.schema.v1.DeleteSchemaResponse\x12[\n" +
-	"\x10ListVendorModels\x12\".schema.v1.ListVendorModelsRequest\x1a#.schema.v1.ListVendorModelsResponseB\xa7\x01\n" +
+	"\x10ListVendorModels\x12\".schema.v1.ListVendorModelsRequest\x1a#.schema.v1.ListVendorModelsResponse\x12R\n" +
+	"\rSearchSchemas\x12\x1f.schema.v1.SearchSchemasRequest\x1a .schema.v1.SearchSchemasResponseB\xa7\x01\n" +
 	"\rcom.schema.v1B\vSchemaProtoP\x01ZDgithub.com/ChargePi/chargeflow-registry/gen/proto/schema/v1;schemav1\xa2\x02\x03SXX\xaa\x02\tSchema.V1\xca\x02\tSchema\\V1\xe2\x02\x15Schema\\V1\\GPBMetadata\xea\x02\n" +
 	"Schema::V1b\x06proto3"
 
@@ -935,7 +1116,7 @@ func file_schema_v1_schema_proto_rawDescGZIP() []byte {
 }
 
 var file_schema_v1_schema_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_schema_v1_schema_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_schema_v1_schema_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_schema_v1_schema_proto_goTypes = []any{
 	(OcppVersion)(0),                 // 0: schema.v1.OcppVersion
 	(MessageType)(0),                 // 1: schema.v1.MessageType
@@ -950,13 +1131,15 @@ var file_schema_v1_schema_proto_goTypes = []any{
 	(*VendorModel)(nil),              // 10: schema.v1.VendorModel
 	(*ListVendorModelsRequest)(nil),  // 11: schema.v1.ListVendorModelsRequest
 	(*ListVendorModelsResponse)(nil), // 12: schema.v1.ListVendorModelsResponse
-	(*timestamppb.Timestamp)(nil),    // 13: google.protobuf.Timestamp
+	(*SearchSchemasRequest)(nil),     // 13: schema.v1.SearchSchemasRequest
+	(*SearchSchemasResponse)(nil),    // 14: schema.v1.SearchSchemasResponse
+	(*timestamppb.Timestamp)(nil),    // 15: google.protobuf.Timestamp
 }
 var file_schema_v1_schema_proto_depIdxs = []int32{
 	0,  // 0: schema.v1.Schema.ocpp_version:type_name -> schema.v1.OcppVersion
 	1,  // 1: schema.v1.Schema.message_type:type_name -> schema.v1.MessageType
-	13, // 2: schema.v1.Schema.created_at:type_name -> google.protobuf.Timestamp
-	13, // 3: schema.v1.Schema.updated_at:type_name -> google.protobuf.Timestamp
+	15, // 2: schema.v1.Schema.created_at:type_name -> google.protobuf.Timestamp
+	15, // 3: schema.v1.Schema.updated_at:type_name -> google.protobuf.Timestamp
 	2,  // 4: schema.v1.Schema.status:type_name -> schema.v1.SchemaStatus
 	0,  // 5: schema.v1.AddSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
 	0,  // 6: schema.v1.UpsertSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
@@ -964,19 +1147,24 @@ var file_schema_v1_schema_proto_depIdxs = []int32{
 	0,  // 8: schema.v1.DeleteSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
 	0,  // 9: schema.v1.VendorModel.ocpp_version:type_name -> schema.v1.OcppVersion
 	10, // 10: schema.v1.ListVendorModelsResponse.vendor_models:type_name -> schema.v1.VendorModel
-	4,  // 11: schema.v1.SchemaRegistryService.AddSchema:input_type -> schema.v1.AddSchemaRequest
-	6,  // 12: schema.v1.SchemaRegistryService.UpsertSchema:input_type -> schema.v1.UpsertSchemaRequest
-	8,  // 13: schema.v1.SchemaRegistryService.DeleteSchema:input_type -> schema.v1.DeleteSchemaRequest
-	11, // 14: schema.v1.SchemaRegistryService.ListVendorModels:input_type -> schema.v1.ListVendorModelsRequest
-	5,  // 15: schema.v1.SchemaRegistryService.AddSchema:output_type -> schema.v1.AddSchemaResponse
-	7,  // 16: schema.v1.SchemaRegistryService.UpsertSchema:output_type -> schema.v1.UpsertSchemaResponse
-	9,  // 17: schema.v1.SchemaRegistryService.DeleteSchema:output_type -> schema.v1.DeleteSchemaResponse
-	12, // 18: schema.v1.SchemaRegistryService.ListVendorModels:output_type -> schema.v1.ListVendorModelsResponse
-	15, // [15:19] is the sub-list for method output_type
-	11, // [11:15] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	0,  // 11: schema.v1.SearchSchemasRequest.ocpp_version:type_name -> schema.v1.OcppVersion
+	1,  // 12: schema.v1.SearchSchemasRequest.message_type:type_name -> schema.v1.MessageType
+	3,  // 13: schema.v1.SearchSchemasResponse.schemas:type_name -> schema.v1.Schema
+	4,  // 14: schema.v1.SchemaRegistryService.AddSchema:input_type -> schema.v1.AddSchemaRequest
+	6,  // 15: schema.v1.SchemaRegistryService.UpsertSchema:input_type -> schema.v1.UpsertSchemaRequest
+	8,  // 16: schema.v1.SchemaRegistryService.DeleteSchema:input_type -> schema.v1.DeleteSchemaRequest
+	11, // 17: schema.v1.SchemaRegistryService.ListVendorModels:input_type -> schema.v1.ListVendorModelsRequest
+	13, // 18: schema.v1.SchemaRegistryService.SearchSchemas:input_type -> schema.v1.SearchSchemasRequest
+	5,  // 19: schema.v1.SchemaRegistryService.AddSchema:output_type -> schema.v1.AddSchemaResponse
+	7,  // 20: schema.v1.SchemaRegistryService.UpsertSchema:output_type -> schema.v1.UpsertSchemaResponse
+	9,  // 21: schema.v1.SchemaRegistryService.DeleteSchema:output_type -> schema.v1.DeleteSchemaResponse
+	12, // 22: schema.v1.SchemaRegistryService.ListVendorModels:output_type -> schema.v1.ListVendorModelsResponse
+	14, // 23: schema.v1.SchemaRegistryService.SearchSchemas:output_type -> schema.v1.SearchSchemasResponse
+	19, // [19:24] is the sub-list for method output_type
+	14, // [14:19] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_schema_v1_schema_proto_init() }
@@ -988,13 +1176,14 @@ func file_schema_v1_schema_proto_init() {
 	file_schema_v1_schema_proto_msgTypes[1].OneofWrappers = []any{}
 	file_schema_v1_schema_proto_msgTypes[3].OneofWrappers = []any{}
 	file_schema_v1_schema_proto_msgTypes[5].OneofWrappers = []any{}
+	file_schema_v1_schema_proto_msgTypes[10].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_schema_v1_schema_proto_rawDesc), len(file_schema_v1_schema_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   10,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

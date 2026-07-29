@@ -16,7 +16,7 @@ type SchemaRegistry interface {
 	Get(ctx context.Context, version schema.OCPPVersion, action string, msgType schema.MessageType, vendor, model *string) (*schema.Schema, error)
 	AddPair(ctx context.Context, req, resp *schema.Schema) error
 	Delete(ctx context.Context, version schema.OCPPVersion, action string, vendor, model *string) error
-	List(ctx context.Context, version schema.OCPPVersion, vendor, model *string, status *schema.Status, limit, offset uint32) ([]*schema.Schema, int64, error)
+	List(ctx context.Context, version schema.OCPPVersion, vendor, model, action *string, msgType *schema.MessageType, status *schema.Status, limit, offset uint32) ([]*schema.Schema, int64, error)
 }
 
 // MessageValidator is the subset of validation.Service used by the MCP server.

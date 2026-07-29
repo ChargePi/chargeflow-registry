@@ -100,6 +100,32 @@ message ListVendorModelsResponse {
   string next_page_token = 3;
 }
 
+// SearchSchemasRequest searches verified schemas, optionally filtered by OCPP
+// version, vendor, model, action, and message type.
+message SearchSchemasRequest {
+  // Optional OCPP version filter. Unspecified matches any version.
+  optional OcppVersion ocpp_version = 1;
+  optional string vendor = 2;
+  optional string model = 3;
+  optional string action = 4;
+  // Optional message direction filter. Unspecified returns both request and response schemas.
+  MessageType message_type = 5;
+  // Max results per page. <= 0 applies the server default (50), capped at 200.
+  int32 page_size = 6;
+  // Opaque cursor from a previous SearchSchemasResponse.next_page_token.
+  // Omit to fetch the first page.
+  string page_token = 7;
+}
+
+message SearchSchemasResponse {
+  repeated Schema schemas = 1;
+  // Total number of verified schemas matching the filter, ignoring pagination.
+  int64 total_size = 2;
+  // Pass as SearchSchemasRequest.page_token to fetch the next page. Empty
+  // when this is the last page.
+  string next_page_token = 3;
+}
+
 service SchemaRegistryService {
   rpc AddSchema(AddSchemaRequest) returns (AddSchemaResponse);
   rpc UpsertSchema(UpsertSchemaRequest) returns (UpsertSchemaResponse);
@@ -107,4 +133,7 @@ service SchemaRegistryService {
   // ListVendorModels returns the OCPP version, vendor, and model combinations
   // available for the given vendor, optionally filtered to a set of models.
   rpc ListVendorModels(ListVendorModelsRequest) returns (ListVendorModelsResponse);
+  // SearchSchemas returns verified schemas, optionally filtered by OCPP
+  // version, vendor, model, action, and message type.
+  rpc SearchSchemas(SearchSchemasRequest) returns (SearchSchemasResponse);
 }

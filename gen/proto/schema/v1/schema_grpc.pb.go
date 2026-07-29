@@ -24,6 +24,9 @@ type SchemaRegistryServiceClient interface {
 	// ListVendorModels returns the OCPP version, vendor, and model combinations
 	// available for the given vendor, optionally filtered to a set of models.
 	ListVendorModels(ctx context.Context, in *ListVendorModelsRequest, opts ...grpc.CallOption) (*ListVendorModelsResponse, error)
+	// SearchSchemas returns verified schemas, optionally filtered by OCPP
+	// version, vendor, model, action, and message type.
+	SearchSchemas(ctx context.Context, in *SearchSchemasRequest, opts ...grpc.CallOption) (*SearchSchemasResponse, error)
 }
 
 type schemaRegistryServiceClient struct {
@@ -70,6 +73,15 @@ func (c *schemaRegistryServiceClient) ListVendorModels(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *schemaRegistryServiceClient) SearchSchemas(ctx context.Context, in *SearchSchemasRequest, opts ...grpc.CallOption) (*SearchSchemasResponse, error) {
+	out := new(SearchSchemasResponse)
+	err := c.cc.Invoke(ctx, "/schema.v1.SchemaRegistryService/SearchSchemas", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SchemaRegistryServiceServer is the server API for SchemaRegistryService service.
 // All implementations must embed UnimplementedSchemaRegistryServiceServer
 // for forward compatibility
@@ -80,6 +92,9 @@ type SchemaRegistryServiceServer interface {
 	// ListVendorModels returns the OCPP version, vendor, and model combinations
 	// available for the given vendor, optionally filtered to a set of models.
 	ListVendorModels(context.Context, *ListVendorModelsRequest) (*ListVendorModelsResponse, error)
+	// SearchSchemas returns verified schemas, optionally filtered by OCPP
+	// version, vendor, model, action, and message type.
+	SearchSchemas(context.Context, *SearchSchemasRequest) (*SearchSchemasResponse, error)
 	mustEmbedUnimplementedSchemaRegistryServiceServer()
 }
 
@@ -98,6 +113,9 @@ func (UnimplementedSchemaRegistryServiceServer) DeleteSchema(context.Context, *D
 }
 func (UnimplementedSchemaRegistryServiceServer) ListVendorModels(context.Context, *ListVendorModelsRequest) (*ListVendorModelsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListVendorModels not implemented")
+}
+func (UnimplementedSchemaRegistryServiceServer) SearchSchemas(context.Context, *SearchSchemasRequest) (*SearchSchemasResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SearchSchemas not implemented")
 }
 func (UnimplementedSchemaRegistryServiceServer) mustEmbedUnimplementedSchemaRegistryServiceServer() {}
 
@@ -184,6 +202,24 @@ func _SchemaRegistryService_ListVendorModels_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SchemaRegistryService_SearchSchemas_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchSchemasRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchemaRegistryServiceServer).SearchSchemas(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/schema.v1.SchemaRegistryService/SearchSchemas",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchemaRegistryServiceServer).SearchSchemas(ctx, req.(*SearchSchemasRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SchemaRegistryService_ServiceDesc is the grpc.ServiceDesc for SchemaRegistryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -206,6 +242,10 @@ var SchemaRegistryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListVendorModels",
 			Handler:    _SchemaRegistryService_ListVendorModels_Handler,
+		},
+		{
+			MethodName: "SearchSchemas",
+			Handler:    _SchemaRegistryService_SearchSchemas_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

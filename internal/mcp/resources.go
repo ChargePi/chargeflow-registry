@@ -79,7 +79,7 @@ func (h *handlers) listSchemas(ctx context.Context, req mcplib.ReadResourceReque
 	}
 
 	// The MCP API is user-facing, so only admin-verified schemas are ever listed here.
-	schemas, _, err := h.schemaSvc.List(ctx, schema.OCPPVersion(version), nil, nil, lo.ToPtr(schema.StatusVerified), schema.MaxPageSize, 0)
+	schemas, _, err := h.schemaSvc.List(ctx, schema.OCPPVersion(version), nil, nil, nil, nil, lo.ToPtr(schema.StatusVerified), schema.MaxPageSize, 0)
 	if err != nil {
 		return nil, fmt.Errorf("list schemas: %w", err)
 	}

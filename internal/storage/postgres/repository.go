@@ -65,8 +65,8 @@ func (r *SchemaRepository) Add(ctx context.Context, s *schema.Schema) error {
 }
 
 // List returns schemas matching the given filters, paginated. An empty version, nil
-// vendor/model, or nil status matches "any" for that field.
-func (r *SchemaRepository) List(ctx context.Context, version schema.OCPPVersion, vendor, model *string, status *schema.Status, limit, offset uint32) ([]*schema.Schema, int64, error) {
+// vendor/model/action/status, or nil msgType matches "any" for that field.
+func (r *SchemaRepository) List(ctx context.Context, version schema.OCPPVersion, vendor, model, action *string, msgType *schema.MessageType, status *schema.Status, limit, offset uint32) ([]*schema.Schema, int64, error) {
 	query := r.db.WithContext(ctx).Model(&schemaEntity{})
 	if version != "" {
 		query = query.Where("ocpp_version = ?", version)
@@ -76,6 +76,12 @@ func (r *SchemaRepository) List(ctx context.Context, version schema.OCPPVersion,
 	}
 	if model != nil {
 		query = query.Where("model = ?", *model)
+	}
+	if action != nil {
+		query = query.Where("action = ?", *action)
+	}
+	if msgType != nil {
+		query = query.Where("message_type = ?", string(*msgType))
 	}
 	if status != nil {
 		query = query.Where("status = ?", string(*status))
@@ -87,7 +93,7 @@ func (r *SchemaRepository) List(ctx context.Context, version schema.OCPPVersion,
 	}
 
 	var entities []*schemaEntity
-	if err := query.Order("created_at DESC").Limit(int(limit)).Offset(int(offset)).Find(&entities).Error; err != nil {
+	if err := query.Order("ocpp_version ASC, vendor ASC, model ASC, action ASC").Limit(int(limit)).Offset(int(offset)).Find(&entities).Error; err != nil {
 		return nil, 0, fmt.Errorf("list schemas: %w", err)
 	}
 
