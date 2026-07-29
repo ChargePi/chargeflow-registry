@@ -14,6 +14,7 @@ type SchemaService interface {
 	AddPair(ctx context.Context, req, resp *schema.Schema) error
 	Upsert(ctx context.Context, s *schema.Schema) error
 	Delete(ctx context.Context, version schema.OCPPVersion, action string, vendor, model *string) error
+	ListVendorModels(ctx context.Context, vendor string, models []string) ([]*schema.VendorModel, error)
 }
 
 type Handler struct {
@@ -144,4 +145,17 @@ func (h *Handler) DeleteSchema(ctx context.Context, req *schemav1.DeleteSchemaRe
 	}
 
 	return &schemav1.DeleteSchemaResponse{}, nil
+}
+
+func (h *Handler) ListVendorModels(ctx context.Context, req *schemav1.ListVendorModelsRequest) (*schemav1.ListVendorModelsResponse, error) {
+	if req.Vendor == "" {
+		return nil, status.Error(codes.InvalidArgument, "vendor is required")
+	}
+
+	vendorModels, err := h.service.ListVendorModels(ctx, req.Vendor, req.Models)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &schemav1.ListVendorModelsResponse{VendorModels: vendorModelsToProto(vendorModels)}, nil
 }

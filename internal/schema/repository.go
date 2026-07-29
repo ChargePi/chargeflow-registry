@@ -35,6 +35,9 @@ type Repository interface {
 	// UpdateStatus sets the status of the schema with the given ID and returns the
 	// updated schema. Returns ErrNotFound if no schema with that ID exists.
 	UpdateStatus(ctx context.Context, id uuid.UUID, status Status) (*Schema, error)
+	// ListVendorModels returns the distinct OCPP version/vendor/model combinations
+	// for verified schemas belonging to vendor, optionally filtered to models.
+	ListVendorModels(ctx context.Context, vendor string, models []string) ([]*VendorModel, error)
 }
 
 type Cache interface {

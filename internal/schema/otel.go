@@ -13,3 +13,7 @@ func actionAttr(action string) attribute.KeyValue {
 func messageTypeAttr(msgType MessageType) attribute.KeyValue {
 	return attribute.String("ocpp.message_type", string(msgType))
 }
+
+func vendorAttr(vendor string) attribute.KeyValue {
+	return attribute.String("ocpp.vendor", vendor)
+}

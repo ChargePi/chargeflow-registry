@@ -639,6 +639,165 @@ func (*DeleteSchemaResponse) Descriptor() ([]byte, []int) {
 	return file_schema_v1_schema_proto_rawDescGZIP(), []int{6}
 }
 
+// VendorModel identifies a charge point model available for a given OCPP version.
+type VendorModel struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OcppVersion   OcppVersion            `protobuf:"varint,1,opt,name=ocpp_version,json=ocppVersion,proto3,enum=schema.v1.OcppVersion" json:"ocpp_version,omitempty"`
+	Vendor        string                 `protobuf:"bytes,2,opt,name=vendor,proto3" json:"vendor,omitempty"`
+	Model         string                 `protobuf:"bytes,3,opt,name=model,proto3" json:"model,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VendorModel) Reset() {
+	*x = VendorModel{}
+	mi := &file_schema_v1_schema_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VendorModel) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VendorModel) ProtoMessage() {}
+
+func (x *VendorModel) ProtoReflect() protoreflect.Message {
+	mi := &file_schema_v1_schema_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VendorModel.ProtoReflect.Descriptor instead.
+func (*VendorModel) Descriptor() ([]byte, []int) {
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *VendorModel) GetOcppVersion() OcppVersion {
+	if x != nil {
+		return x.OcppVersion
+	}
+	return OcppVersion_OCPP_VERSION_UNSPECIFIED
+}
+
+func (x *VendorModel) GetVendor() string {
+	if x != nil {
+		return x.Vendor
+	}
+	return ""
+}
+
+func (x *VendorModel) GetModel() string {
+	if x != nil {
+		return x.Model
+	}
+	return ""
+}
+
+// ListVendorModelsRequest searches for available charge point models for a vendor.
+type ListVendorModelsRequest struct {
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	Vendor string                 `protobuf:"bytes,1,opt,name=vendor,proto3" json:"vendor,omitempty"`
+	// Optional list of models to filter by. Empty matches any model.
+	Models        []string `protobuf:"bytes,2,rep,name=models,proto3" json:"models,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListVendorModelsRequest) Reset() {
+	*x = ListVendorModelsRequest{}
+	mi := &file_schema_v1_schema_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListVendorModelsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListVendorModelsRequest) ProtoMessage() {}
+
+func (x *ListVendorModelsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_schema_v1_schema_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListVendorModelsRequest.ProtoReflect.Descriptor instead.
+func (*ListVendorModelsRequest) Descriptor() ([]byte, []int) {
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ListVendorModelsRequest) GetVendor() string {
+	if x != nil {
+		return x.Vendor
+	}
+	return ""
+}
+
+func (x *ListVendorModelsRequest) GetModels() []string {
+	if x != nil {
+		return x.Models
+	}
+	return nil
+}
+
+type ListVendorModelsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	VendorModels  []*VendorModel         `protobuf:"bytes,1,rep,name=vendor_models,json=vendorModels,proto3" json:"vendor_models,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListVendorModelsResponse) Reset() {
+	*x = ListVendorModelsResponse{}
+	mi := &file_schema_v1_schema_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListVendorModelsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListVendorModelsResponse) ProtoMessage() {}
+
+func (x *ListVendorModelsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_schema_v1_schema_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListVendorModelsResponse.ProtoReflect.Descriptor instead.
+func (*ListVendorModelsResponse) Descriptor() ([]byte, []int) {
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ListVendorModelsResponse) GetVendorModels() []*VendorModel {
+	if x != nil {
+		return x.VendorModels
+	}
+	return nil
+}
+
 var File_schema_v1_schema_proto protoreflect.FileDescriptor
 
 const file_schema_v1_schema_proto_rawDesc = "" +
@@ -687,7 +846,16 @@ const file_schema_v1_schema_proto_rawDesc = "" +
 	"\x05model\x18\x04 \x01(\tH\x01R\x05model\x88\x01\x01B\t\n" +
 	"\a_vendorB\b\n" +
 	"\x06_model\"\x16\n" +
-	"\x14DeleteSchemaResponse*k\n" +
+	"\x14DeleteSchemaResponse\"v\n" +
+	"\vVendorModel\x129\n" +
+	"\focpp_version\x18\x01 \x01(\x0e2\x16.schema.v1.OcppVersionR\vocppVersion\x12\x16\n" +
+	"\x06vendor\x18\x02 \x01(\tR\x06vendor\x12\x14\n" +
+	"\x05model\x18\x03 \x01(\tR\x05model\"I\n" +
+	"\x17ListVendorModelsRequest\x12\x16\n" +
+	"\x06vendor\x18\x01 \x01(\tR\x06vendor\x12\x16\n" +
+	"\x06models\x18\x02 \x03(\tR\x06models\"W\n" +
+	"\x18ListVendorModelsResponse\x12;\n" +
+	"\rvendor_models\x18\x01 \x03(\v2\x16.schema.v1.VendorModelR\fvendorModels*k\n" +
 	"\vOcppVersion\x12\x1c\n" +
 	"\x18OCPP_VERSION_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fOCPP_VERSION_16\x10\x01\x12\x14\n" +
@@ -701,11 +869,12 @@ const file_schema_v1_schema_proto_rawDesc = "" +
 	"\x19SCHEMA_STATUS_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17SCHEMA_STATUS_SUBMITTED\x10\x01\x12\x1a\n" +
 	"\x16SCHEMA_STATUS_VERIFIED\x10\x02\x12\x1a\n" +
-	"\x16SCHEMA_STATUS_REJECTED\x10\x032\x81\x02\n" +
+	"\x16SCHEMA_STATUS_REJECTED\x10\x032\xde\x02\n" +
 	"\x15SchemaRegistryService\x12F\n" +
 	"\tAddSchema\x12\x1b.schema.v1.AddSchemaRequest\x1a\x1c.schema.v1.AddSchemaResponse\x12O\n" +
 	"\fUpsertSchema\x12\x1e.schema.v1.UpsertSchemaRequest\x1a\x1f.schema.v1.UpsertSchemaResponse\x12O\n" +
-	"\fDeleteSchema\x12\x1e.schema.v1.DeleteSchemaRequest\x1a\x1f.schema.v1.DeleteSchemaResponseB\xa7\x01\n" +
+	"\fDeleteSchema\x12\x1e.schema.v1.DeleteSchemaRequest\x1a\x1f.schema.v1.DeleteSchemaResponse\x12[\n" +
+	"\x10ListVendorModels\x12\".schema.v1.ListVendorModelsRequest\x1a#.schema.v1.ListVendorModelsResponseB\xa7\x01\n" +
 	"\rcom.schema.v1B\vSchemaProtoP\x01ZDgithub.com/ChargePi/chargeflow-registry/gen/proto/schema/v1;schemav1\xa2\x02\x03SXX\xaa\x02\tSchema.V1\xca\x02\tSchema\\V1\xe2\x02\x15Schema\\V1\\GPBMetadata\xea\x02\n" +
 	"Schema::V1b\x06proto3"
 
@@ -722,41 +891,48 @@ func file_schema_v1_schema_proto_rawDescGZIP() []byte {
 }
 
 var file_schema_v1_schema_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_schema_v1_schema_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_schema_v1_schema_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_schema_v1_schema_proto_goTypes = []any{
-	(OcppVersion)(0),              // 0: schema.v1.OcppVersion
-	(MessageType)(0),              // 1: schema.v1.MessageType
-	(SchemaStatus)(0),             // 2: schema.v1.SchemaStatus
-	(*Schema)(nil),                // 3: schema.v1.Schema
-	(*AddSchemaRequest)(nil),      // 4: schema.v1.AddSchemaRequest
-	(*AddSchemaResponse)(nil),     // 5: schema.v1.AddSchemaResponse
-	(*UpsertSchemaRequest)(nil),   // 6: schema.v1.UpsertSchemaRequest
-	(*UpsertSchemaResponse)(nil),  // 7: schema.v1.UpsertSchemaResponse
-	(*DeleteSchemaRequest)(nil),   // 8: schema.v1.DeleteSchemaRequest
-	(*DeleteSchemaResponse)(nil),  // 9: schema.v1.DeleteSchemaResponse
-	(*timestamppb.Timestamp)(nil), // 10: google.protobuf.Timestamp
+	(OcppVersion)(0),                 // 0: schema.v1.OcppVersion
+	(MessageType)(0),                 // 1: schema.v1.MessageType
+	(SchemaStatus)(0),                // 2: schema.v1.SchemaStatus
+	(*Schema)(nil),                   // 3: schema.v1.Schema
+	(*AddSchemaRequest)(nil),         // 4: schema.v1.AddSchemaRequest
+	(*AddSchemaResponse)(nil),        // 5: schema.v1.AddSchemaResponse
+	(*UpsertSchemaRequest)(nil),      // 6: schema.v1.UpsertSchemaRequest
+	(*UpsertSchemaResponse)(nil),     // 7: schema.v1.UpsertSchemaResponse
+	(*DeleteSchemaRequest)(nil),      // 8: schema.v1.DeleteSchemaRequest
+	(*DeleteSchemaResponse)(nil),     // 9: schema.v1.DeleteSchemaResponse
+	(*VendorModel)(nil),              // 10: schema.v1.VendorModel
+	(*ListVendorModelsRequest)(nil),  // 11: schema.v1.ListVendorModelsRequest
+	(*ListVendorModelsResponse)(nil), // 12: schema.v1.ListVendorModelsResponse
+	(*timestamppb.Timestamp)(nil),    // 13: google.protobuf.Timestamp
 }
 var file_schema_v1_schema_proto_depIdxs = []int32{
 	0,  // 0: schema.v1.Schema.ocpp_version:type_name -> schema.v1.OcppVersion
 	1,  // 1: schema.v1.Schema.message_type:type_name -> schema.v1.MessageType
-	10, // 2: schema.v1.Schema.created_at:type_name -> google.protobuf.Timestamp
-	10, // 3: schema.v1.Schema.updated_at:type_name -> google.protobuf.Timestamp
+	13, // 2: schema.v1.Schema.created_at:type_name -> google.protobuf.Timestamp
+	13, // 3: schema.v1.Schema.updated_at:type_name -> google.protobuf.Timestamp
 	2,  // 4: schema.v1.Schema.status:type_name -> schema.v1.SchemaStatus
 	0,  // 5: schema.v1.AddSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
 	0,  // 6: schema.v1.UpsertSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
 	1,  // 7: schema.v1.UpsertSchemaRequest.message_type:type_name -> schema.v1.MessageType
 	0,  // 8: schema.v1.DeleteSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
-	4,  // 9: schema.v1.SchemaRegistryService.AddSchema:input_type -> schema.v1.AddSchemaRequest
-	6,  // 10: schema.v1.SchemaRegistryService.UpsertSchema:input_type -> schema.v1.UpsertSchemaRequest
-	8,  // 11: schema.v1.SchemaRegistryService.DeleteSchema:input_type -> schema.v1.DeleteSchemaRequest
-	5,  // 12: schema.v1.SchemaRegistryService.AddSchema:output_type -> schema.v1.AddSchemaResponse
-	7,  // 13: schema.v1.SchemaRegistryService.UpsertSchema:output_type -> schema.v1.UpsertSchemaResponse
-	9,  // 14: schema.v1.SchemaRegistryService.DeleteSchema:output_type -> schema.v1.DeleteSchemaResponse
-	12, // [12:15] is the sub-list for method output_type
-	9,  // [9:12] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	0,  // 9: schema.v1.VendorModel.ocpp_version:type_name -> schema.v1.OcppVersion
+	10, // 10: schema.v1.ListVendorModelsResponse.vendor_models:type_name -> schema.v1.VendorModel
+	4,  // 11: schema.v1.SchemaRegistryService.AddSchema:input_type -> schema.v1.AddSchemaRequest
+	6,  // 12: schema.v1.SchemaRegistryService.UpsertSchema:input_type -> schema.v1.UpsertSchemaRequest
+	8,  // 13: schema.v1.SchemaRegistryService.DeleteSchema:input_type -> schema.v1.DeleteSchemaRequest
+	11, // 14: schema.v1.SchemaRegistryService.ListVendorModels:input_type -> schema.v1.ListVendorModelsRequest
+	5,  // 15: schema.v1.SchemaRegistryService.AddSchema:output_type -> schema.v1.AddSchemaResponse
+	7,  // 16: schema.v1.SchemaRegistryService.UpsertSchema:output_type -> schema.v1.UpsertSchemaResponse
+	9,  // 17: schema.v1.SchemaRegistryService.DeleteSchema:output_type -> schema.v1.DeleteSchemaResponse
+	12, // 18: schema.v1.SchemaRegistryService.ListVendorModels:output_type -> schema.v1.ListVendorModelsResponse
+	15, // [15:19] is the sub-list for method output_type
+	11, // [11:15] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_schema_v1_schema_proto_init() }
@@ -774,7 +950,7 @@ func file_schema_v1_schema_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_schema_v1_schema_proto_rawDesc), len(file_schema_v1_schema_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   7,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

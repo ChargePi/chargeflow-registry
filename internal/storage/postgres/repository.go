@@ -127,6 +127,35 @@ func (r *SchemaRepository) Upsert(ctx context.Context, s *schema.Schema) error {
 	return nil
 }
 
+// ListVendorModels returns the distinct OCPP version/vendor/model combinations for
+// verified schemas belonging to vendor, optionally filtered to models. Entries
+// without a model (generic vendor-only schemas) are excluded, since these
+// represent hardware charge point models rather than CSMS vendors.
+func (r *SchemaRepository) ListVendorModels(ctx context.Context, vendor string, models []string) ([]*schema.VendorModel, error) {
+	query := r.db.WithContext(ctx).Model(&schemaEntity{}).
+		Distinct("ocpp_version", "vendor", "model").
+		Where("vendor = ? AND model IS NOT NULL AND status = ?", vendor, string(schema.StatusVerified))
+	if len(models) > 0 {
+		query = query.Where("model IN ?", models)
+	}
+
+	var entities []*schemaEntity
+	if err := query.Order("ocpp_version, model").Find(&entities).Error; err != nil {
+		return nil, fmt.Errorf("list vendor models: %w", err)
+	}
+
+	vendorModels := make([]*schema.VendorModel, len(entities))
+	for i, e := range entities {
+		vendorModels[i] = &schema.VendorModel{
+			OCPPVersion: schema.OCPPVersion(e.OCPPVersion),
+			Vendor:      *e.Vendor,
+			Model:       *e.Model,
+		}
+	}
+
+	return vendorModels, nil
+}
+
 func (r *SchemaRepository) Delete(ctx context.Context, version schema.OCPPVersion, action string, msgType schema.MessageType, vendor, model *string) error {
 	result := r.db.WithContext(ctx).
 		Where("ocpp_version = ? AND action = ? AND message_type = ? AND vendor IS NOT DISTINCT FROM ? AND model IS NOT DISTINCT FROM ?",
