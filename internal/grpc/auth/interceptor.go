@@ -48,6 +48,8 @@ var methodRoles = map[string]Role{
 	"/schema.v1.SchemaRegistryService/UpsertSchema":      RoleWriter,
 	"/schema.v1.SchemaRegistryService/DeleteSchema":      RoleWriter,
 	"/schema.v1.SchemaValidationService/ValidateMessage": RoleReader,
+	"/admin.v1.AdminService/ListSchemas":                 RoleAdmin,
+	"/admin.v1.AdminService/ChangeStatus":                RoleAdmin,
 }
 
 // Interceptor validates JWT bearer tokens and enforces role-based access on gRPC methods.

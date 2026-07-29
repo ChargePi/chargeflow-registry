@@ -25,15 +25,21 @@ type GRPCConfiguration struct {
 	Address string `json:"address" yaml:"address" mapstructure:"address" validate:"required"`
 }
 
+// AdminGRPCConfiguration configures the separate gRPC server exposing the AdminAPI.
+type AdminGRPCConfiguration struct {
+	Address string `json:"address" yaml:"address" mapstructure:"address" validate:"required"`
+}
+
 type MCPConfiguration struct {
 	Address string `json:"address" yaml:"address" mapstructure:"address" validate:"required"`
 }
 
 type Configuration struct {
-	Database      DatabaseConfiguration `json:"database"      yaml:"database"      mapstructure:"database"      validate:"required"`
-	Redis         RedisConfiguration    `json:"redis"         yaml:"redis"         mapstructure:"redis"         validate:"required"`
-	Observability observability.Config  `json:"observability" yaml:"observability" mapstructure:"observability" validate:"required"`
-	GRPC          GRPCConfiguration     `json:"grpc"          yaml:"grpc"          mapstructure:"grpc"          validate:"required"`
-	Auth          AuthConfiguration     `json:"auth"          yaml:"auth"          mapstructure:"auth"          validate:"required"`
-	MCP           MCPConfiguration      `json:"mcp"           yaml:"mcp"           mapstructure:"mcp"           validate:"required"`
+	Database      DatabaseConfiguration  `json:"database"      yaml:"database"      mapstructure:"database"      validate:"required"`
+	Redis         RedisConfiguration     `json:"redis"         yaml:"redis"         mapstructure:"redis"         validate:"required"`
+	Observability observability.Config   `json:"observability" yaml:"observability" mapstructure:"observability" validate:"required"`
+	GRPC          GRPCConfiguration      `json:"grpc"          yaml:"grpc"          mapstructure:"grpc"          validate:"required"`
+	AdminGRPC     AdminGRPCConfiguration `json:"adminGrpc"     yaml:"adminGrpc"     mapstructure:"adminGrpc"     validate:"required"`
+	Auth          AuthConfiguration      `json:"auth"          yaml:"auth"          mapstructure:"auth"          validate:"required"`
+	MCP           MCPConfiguration       `json:"mcp"           yaml:"mcp"           mapstructure:"mcp"           validate:"required"`
 }

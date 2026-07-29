@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/ChargePi/chargeflow-registry/internal/schema"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -17,12 +18,14 @@ func NewRepository(db *gorm.DB) *SchemaRepository {
 	return &SchemaRepository{db: db}
 }
 
+// Get retrieves a verified schema. Schemas awaiting review or rejected by an admin
+// are only visible through the AdminAPI, not this general lookup path.
 func (r *SchemaRepository) Get(ctx context.Context, version schema.OCPPVersion, action string, msgType schema.MessageType, vendor, model *string) (*schema.Schema, error) {
 	if vendor != nil || model != nil {
 		var entity schemaEntity
 		err := r.db.WithContext(ctx).
-			Where("ocpp_version = ? AND action = ? AND message_type = ? AND vendor IS NOT DISTINCT FROM ? AND model IS NOT DISTINCT FROM ?",
-				version, action, msgType, vendor, model).
+			Where("ocpp_version = ? AND action = ? AND message_type = ? AND vendor IS NOT DISTINCT FROM ? AND model IS NOT DISTINCT FROM ? AND status = ?",
+				version, action, msgType, vendor, model, string(schema.StatusVerified)).
 			First(&entity).Error
 		if err == nil {
 			return toDomain(&entity), nil
@@ -35,8 +38,8 @@ func (r *SchemaRepository) Get(ctx context.Context, version schema.OCPPVersion, 
 	// Fall back to generic schema (nil vendor/model)
 	var entity schemaEntity
 	err := r.db.WithContext(ctx).
-		Where("ocpp_version = ? AND action = ? AND message_type = ? AND vendor IS NULL AND model IS NULL",
-			version, action, msgType).
+		Where("ocpp_version = ? AND action = ? AND message_type = ? AND vendor IS NULL AND model IS NULL AND status = ?",
+			version, action, msgType, string(schema.StatusVerified)).
 		First(&entity).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -61,17 +64,52 @@ func (r *SchemaRepository) Add(ctx context.Context, s *schema.Schema) error {
 	return nil
 }
 
-func (r *SchemaRepository) List(ctx context.Context, version schema.OCPPVersion, vendor, model *string) ([]*schema.Schema, error) {
-	var entities []*schemaEntity
-	err := r.db.WithContext(ctx).
-		Where("ocpp_version = ? AND vendor IS NOT DISTINCT FROM ? AND model IS NOT DISTINCT FROM ?",
-			version, vendor, model).
-		Find(&entities).Error
-	if err != nil {
-		return nil, fmt.Errorf("list schemas: %w", err)
+// List returns schemas matching the given filters, paginated. An empty version, nil
+// vendor/model, or nil status matches "any" for that field.
+func (r *SchemaRepository) List(ctx context.Context, version schema.OCPPVersion, vendor, model *string, status *schema.Status, limit, offset uint32) ([]*schema.Schema, int64, error) {
+	query := r.db.WithContext(ctx).Model(&schemaEntity{})
+	if version != "" {
+		query = query.Where("ocpp_version = ?", version)
+	}
+	if vendor != nil {
+		query = query.Where("vendor = ?", *vendor)
+	}
+	if model != nil {
+		query = query.Where("model = ?", *model)
+	}
+	if status != nil {
+		query = query.Where("status = ?", string(*status))
 	}
 
-	return toDomainSlice(entities), nil
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("count schemas: %w", err)
+	}
+
+	var entities []*schemaEntity
+	if err := query.Order("created_at DESC").Limit(int(limit)).Offset(int(offset)).Find(&entities).Error; err != nil {
+		return nil, 0, fmt.Errorf("list schemas: %w", err)
+	}
+
+	return toDomainSlice(entities), total, nil
+}
+
+// UpdateStatus sets the status of the schema with the given ID and returns the updated schema.
+func (r *SchemaRepository) UpdateStatus(ctx context.Context, id uuid.UUID, status schema.Status) (*schema.Schema, error) {
+	result := r.db.WithContext(ctx).Model(&schemaEntity{}).Where("id = ?", id).Update("status", string(status))
+	if result.Error != nil {
+		return nil, fmt.Errorf("update schema status: %w", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return nil, schema.ErrNotFound
+	}
+
+	var entity schemaEntity
+	if err := r.db.WithContext(ctx).First(&entity, "id = ?", id).Error; err != nil {
+		return nil, fmt.Errorf("get updated schema: %w", err)
+	}
+
+	return toDomain(&entity), nil
 }
 
 func (r *SchemaRepository) Upsert(ctx context.Context, s *schema.Schema) error {

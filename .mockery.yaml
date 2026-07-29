@@ -12,6 +12,7 @@ packages:
     interfaces:
       SchemaService:
       ValidationService:
+      AdminService:
   github.com/ChargePi/chargeflow-registry/internal/validation:
     interfaces:
       SchemaGetter:

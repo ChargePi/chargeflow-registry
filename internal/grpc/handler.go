@@ -79,6 +79,7 @@ func (h *Handler) AddSchema(ctx context.Context, req *schemav1.AddSchemaRequest)
 		Action:      req.Action,
 		Vendor:      req.Vendor,
 		Model:       req.Model,
+		Status:      schema.StatusSubmitted,
 	}
 	reqSchema := base
 	reqSchema.MessageType = schema.MessageTypeRequest
@@ -116,6 +117,7 @@ func (h *Handler) UpsertSchema(ctx context.Context, req *schemav1.UpsertSchemaRe
 		Vendor:      req.Vendor,
 		Model:       req.Model,
 		Schema:      req.Schema,
+		Status:      schema.StatusSubmitted,
 	}
 
 	if err := h.service.Upsert(ctx, s); err != nil {

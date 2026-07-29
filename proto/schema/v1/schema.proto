@@ -17,6 +17,14 @@ enum MessageType {
   MESSAGE_TYPE_RESPONSE = 2;
 }
 
+// SchemaStatus reflects whether a schema has been reviewed by an admin.
+enum SchemaStatus {
+  SCHEMA_STATUS_UNSPECIFIED = 0;
+  SCHEMA_STATUS_SUBMITTED = 1;
+  SCHEMA_STATUS_VERIFIED = 2;
+  SCHEMA_STATUS_REJECTED = 3;
+}
+
 message Schema {
   string id = 1;
   OcppVersion ocpp_version = 2;
@@ -27,6 +35,7 @@ message Schema {
   bytes schema = 7;
   google.protobuf.Timestamp created_at = 8;
   google.protobuf.Timestamp updated_at = 9;
+  SchemaStatus status = 10;
 }
 
 // AddSchemaRequest creates both the request and response schemas for an action in one call.

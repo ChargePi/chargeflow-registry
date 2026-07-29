@@ -22,6 +22,15 @@ const (
 	MessageTypeResponse MessageType = "response"
 )
 
+// Status reflects whether a schema has been reviewed by an admin.
+type Status string
+
+const (
+	StatusSubmitted Status = "submitted"
+	StatusVerified  Status = "verified"
+	StatusRejected  Status = "rejected"
+)
+
 type Schema struct {
 	ID          uuid.UUID
 	OCPPVersion OCPPVersion
@@ -30,6 +39,7 @@ type Schema struct {
 	Vendor      *string
 	Model       *string
 	Schema      json.RawMessage
+	Status      Status
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }

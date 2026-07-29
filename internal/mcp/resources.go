@@ -10,6 +10,7 @@ import (
 	"github.com/ChargePi/chargeflow-registry/internal/schema"
 	mcplib "github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/samber/lo"
 )
 
 const (
@@ -77,7 +78,8 @@ func (h *handlers) listSchemas(ctx context.Context, req mcplib.ReadResourceReque
 		return nil, err
 	}
 
-	schemas, err := h.schemaSvc.List(ctx, schema.OCPPVersion(version), nil, nil)
+	// The MCP API is user-facing, so only admin-verified schemas are ever listed here.
+	schemas, _, err := h.schemaSvc.List(ctx, schema.OCPPVersion(version), nil, nil, lo.ToPtr(schema.StatusVerified), schema.MaxPageSize, 0)
 	if err != nil {
 		return nil, fmt.Errorf("list schemas: %w", err)
 	}

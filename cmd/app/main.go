@@ -11,6 +11,7 @@ import (
 
 	schemav1 "github.com/ChargePi/chargeflow-registry/gen/proto/schema/v1"
 	grpcHandler "github.com/ChargePi/chargeflow-registry/internal/grpc"
+	"github.com/ChargePi/chargeflow-registry/internal/grpc/adminserver"
 	"github.com/ChargePi/chargeflow-registry/internal/grpc/auth"
 	mcpHandler "github.com/ChargePi/chargeflow-registry/internal/mcp"
 	"github.com/ChargePi/chargeflow-registry/internal/schema"
@@ -137,6 +138,14 @@ var (
 			}()
 			defer grpcServer.GracefulStop()
 
+			// AdminAPI is served on its own gRPC server/port so it can be network-isolated
+			// from the general registry API independently of role-based auth.
+			adminGrpcServer := adminserver.NewServer(logger, authInterceptor, schemaSvc)
+			if err := adminGrpcServer.Start(cfg.AdminGRPC.Address); err != nil {
+				logger.Fatal("failed to start admin gRPC server", zap.Error(err))
+			}
+			defer adminGrpcServer.Shutdown(ctx)
+
 			mcpServer := mcpHandler.NewServer(logger.Named("mcp"), schemaSvc, validationSvc)
 			mcpServer.Start(cfg.MCP.Address)
 			defer func() {
@@ -160,6 +169,7 @@ func InitConfig(configurationFilePath string) {
 func setDefaults() {
 	devxCfg.SetDefaults(serviceName)
 	viper.SetDefault("grpc.address", "0.0.0.0:50051")
+	viper.SetDefault("adminGrpc.address", "0.0.0.0:50052")
 	viper.SetDefault("mcp.address", "0.0.0.0:8080")
 	viper.SetDefault("redis.address", "localhost:6379")
 	viper.SetDefault("redis.db", 0)
@@ -171,6 +181,7 @@ func setDefaults() {
 	_ = viper.BindEnv("redis.db", "CHARGEFLOW_REGISTRY_REDIS_DB")
 	_ = viper.BindEnv("redis.cacheTtl", "CHARGEFLOW_REGISTRY_REDIS_CACHETTL")
 	_ = viper.BindEnv("grpc.address", "CHARGEFLOW_REGISTRY_GRPC_ADDRESS")
+	_ = viper.BindEnv("adminGrpc.address", "CHARGEFLOW_REGISTRY_ADMIN_GRPC_ADDRESS")
 	_ = viper.BindEnv("mcp.address", "CHARGEFLOW_REGISTRY_MCP_ADDRESS")
 }
 

@@ -123,6 +123,59 @@ func (MessageType) EnumDescriptor() ([]byte, []int) {
 	return file_schema_v1_schema_proto_rawDescGZIP(), []int{1}
 }
 
+// SchemaStatus reflects whether a schema has been reviewed by an admin.
+type SchemaStatus int32
+
+const (
+	SchemaStatus_SCHEMA_STATUS_UNSPECIFIED SchemaStatus = 0
+	SchemaStatus_SCHEMA_STATUS_SUBMITTED   SchemaStatus = 1
+	SchemaStatus_SCHEMA_STATUS_VERIFIED    SchemaStatus = 2
+	SchemaStatus_SCHEMA_STATUS_REJECTED    SchemaStatus = 3
+)
+
+// Enum value maps for SchemaStatus.
+var (
+	SchemaStatus_name = map[int32]string{
+		0: "SCHEMA_STATUS_UNSPECIFIED",
+		1: "SCHEMA_STATUS_SUBMITTED",
+		2: "SCHEMA_STATUS_VERIFIED",
+		3: "SCHEMA_STATUS_REJECTED",
+	}
+	SchemaStatus_value = map[string]int32{
+		"SCHEMA_STATUS_UNSPECIFIED": 0,
+		"SCHEMA_STATUS_SUBMITTED":   1,
+		"SCHEMA_STATUS_VERIFIED":    2,
+		"SCHEMA_STATUS_REJECTED":    3,
+	}
+)
+
+func (x SchemaStatus) Enum() *SchemaStatus {
+	p := new(SchemaStatus)
+	*p = x
+	return p
+}
+
+func (x SchemaStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (SchemaStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_schema_v1_schema_proto_enumTypes[2].Descriptor()
+}
+
+func (SchemaStatus) Type() protoreflect.EnumType {
+	return &file_schema_v1_schema_proto_enumTypes[2]
+}
+
+func (x SchemaStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use SchemaStatus.Descriptor instead.
+func (SchemaStatus) EnumDescriptor() ([]byte, []int) {
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{2}
+}
+
 type Schema struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -134,6 +187,7 @@ type Schema struct {
 	Schema        []byte                 `protobuf:"bytes,7,opt,name=schema,proto3" json:"schema,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Status        SchemaStatus           `protobuf:"varint,10,opt,name=status,proto3,enum=schema.v1.SchemaStatus" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -229,6 +283,13 @@ func (x *Schema) GetUpdatedAt() *timestamppb.Timestamp {
 		return x.UpdatedAt
 	}
 	return nil
+}
+
+func (x *Schema) GetStatus() SchemaStatus {
+	if x != nil {
+		return x.Status
+	}
+	return SchemaStatus_SCHEMA_STATUS_UNSPECIFIED
 }
 
 // AddSchemaRequest creates both the request and response schemas for an action in one call.
@@ -582,7 +643,7 @@ var File_schema_v1_schema_proto protoreflect.FileDescriptor
 
 const file_schema_v1_schema_proto_rawDesc = "" +
 	"\n" +
-	"\x16schema/v1/schema.proto\x12\tschema.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x81\x03\n" +
+	"\x16schema/v1/schema.proto\x12\tschema.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb2\x03\n" +
 	"\x06Schema\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x129\n" +
 	"\focpp_version\x18\x02 \x01(\x0e2\x16.schema.v1.OcppVersionR\vocppVersion\x12\x16\n" +
@@ -594,7 +655,9 @@ const file_schema_v1_schema_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\t\n" +
+	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12/\n" +
+	"\x06status\x18\n" +
+	" \x01(\x0e2\x17.schema.v1.SchemaStatusR\x06statusB\t\n" +
 	"\a_vendorB\b\n" +
 	"\x06_model\"\x82\x02\n" +
 	"\x10AddSchemaRequest\x129\n" +
@@ -633,7 +696,12 @@ const file_schema_v1_schema_proto_rawDesc = "" +
 	"\vMessageType\x12\x1c\n" +
 	"\x18MESSAGE_TYPE_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14MESSAGE_TYPE_REQUEST\x10\x01\x12\x19\n" +
-	"\x15MESSAGE_TYPE_RESPONSE\x10\x022\x81\x02\n" +
+	"\x15MESSAGE_TYPE_RESPONSE\x10\x02*\x82\x01\n" +
+	"\fSchemaStatus\x12\x1d\n" +
+	"\x19SCHEMA_STATUS_UNSPECIFIED\x10\x00\x12\x1b\n" +
+	"\x17SCHEMA_STATUS_SUBMITTED\x10\x01\x12\x1a\n" +
+	"\x16SCHEMA_STATUS_VERIFIED\x10\x02\x12\x1a\n" +
+	"\x16SCHEMA_STATUS_REJECTED\x10\x032\x81\x02\n" +
 	"\x15SchemaRegistryService\x12F\n" +
 	"\tAddSchema\x12\x1b.schema.v1.AddSchemaRequest\x1a\x1c.schema.v1.AddSchemaResponse\x12O\n" +
 	"\fUpsertSchema\x12\x1e.schema.v1.UpsertSchemaRequest\x1a\x1f.schema.v1.UpsertSchemaResponse\x12O\n" +
@@ -653,40 +721,42 @@ func file_schema_v1_schema_proto_rawDescGZIP() []byte {
 	return file_schema_v1_schema_proto_rawDescData
 }
 
-var file_schema_v1_schema_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_schema_v1_schema_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
 var file_schema_v1_schema_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_schema_v1_schema_proto_goTypes = []any{
 	(OcppVersion)(0),              // 0: schema.v1.OcppVersion
 	(MessageType)(0),              // 1: schema.v1.MessageType
-	(*Schema)(nil),                // 2: schema.v1.Schema
-	(*AddSchemaRequest)(nil),      // 3: schema.v1.AddSchemaRequest
-	(*AddSchemaResponse)(nil),     // 4: schema.v1.AddSchemaResponse
-	(*UpsertSchemaRequest)(nil),   // 5: schema.v1.UpsertSchemaRequest
-	(*UpsertSchemaResponse)(nil),  // 6: schema.v1.UpsertSchemaResponse
-	(*DeleteSchemaRequest)(nil),   // 7: schema.v1.DeleteSchemaRequest
-	(*DeleteSchemaResponse)(nil),  // 8: schema.v1.DeleteSchemaResponse
-	(*timestamppb.Timestamp)(nil), // 9: google.protobuf.Timestamp
+	(SchemaStatus)(0),             // 2: schema.v1.SchemaStatus
+	(*Schema)(nil),                // 3: schema.v1.Schema
+	(*AddSchemaRequest)(nil),      // 4: schema.v1.AddSchemaRequest
+	(*AddSchemaResponse)(nil),     // 5: schema.v1.AddSchemaResponse
+	(*UpsertSchemaRequest)(nil),   // 6: schema.v1.UpsertSchemaRequest
+	(*UpsertSchemaResponse)(nil),  // 7: schema.v1.UpsertSchemaResponse
+	(*DeleteSchemaRequest)(nil),   // 8: schema.v1.DeleteSchemaRequest
+	(*DeleteSchemaResponse)(nil),  // 9: schema.v1.DeleteSchemaResponse
+	(*timestamppb.Timestamp)(nil), // 10: google.protobuf.Timestamp
 }
 var file_schema_v1_schema_proto_depIdxs = []int32{
 	0,  // 0: schema.v1.Schema.ocpp_version:type_name -> schema.v1.OcppVersion
 	1,  // 1: schema.v1.Schema.message_type:type_name -> schema.v1.MessageType
-	9,  // 2: schema.v1.Schema.created_at:type_name -> google.protobuf.Timestamp
-	9,  // 3: schema.v1.Schema.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 4: schema.v1.AddSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
-	0,  // 5: schema.v1.UpsertSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
-	1,  // 6: schema.v1.UpsertSchemaRequest.message_type:type_name -> schema.v1.MessageType
-	0,  // 7: schema.v1.DeleteSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
-	3,  // 8: schema.v1.SchemaRegistryService.AddSchema:input_type -> schema.v1.AddSchemaRequest
-	5,  // 9: schema.v1.SchemaRegistryService.UpsertSchema:input_type -> schema.v1.UpsertSchemaRequest
-	7,  // 10: schema.v1.SchemaRegistryService.DeleteSchema:input_type -> schema.v1.DeleteSchemaRequest
-	4,  // 11: schema.v1.SchemaRegistryService.AddSchema:output_type -> schema.v1.AddSchemaResponse
-	6,  // 12: schema.v1.SchemaRegistryService.UpsertSchema:output_type -> schema.v1.UpsertSchemaResponse
-	8,  // 13: schema.v1.SchemaRegistryService.DeleteSchema:output_type -> schema.v1.DeleteSchemaResponse
-	11, // [11:14] is the sub-list for method output_type
-	8,  // [8:11] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	10, // 2: schema.v1.Schema.created_at:type_name -> google.protobuf.Timestamp
+	10, // 3: schema.v1.Schema.updated_at:type_name -> google.protobuf.Timestamp
+	2,  // 4: schema.v1.Schema.status:type_name -> schema.v1.SchemaStatus
+	0,  // 5: schema.v1.AddSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
+	0,  // 6: schema.v1.UpsertSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
+	1,  // 7: schema.v1.UpsertSchemaRequest.message_type:type_name -> schema.v1.MessageType
+	0,  // 8: schema.v1.DeleteSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
+	4,  // 9: schema.v1.SchemaRegistryService.AddSchema:input_type -> schema.v1.AddSchemaRequest
+	6,  // 10: schema.v1.SchemaRegistryService.UpsertSchema:input_type -> schema.v1.UpsertSchemaRequest
+	8,  // 11: schema.v1.SchemaRegistryService.DeleteSchema:input_type -> schema.v1.DeleteSchemaRequest
+	5,  // 12: schema.v1.SchemaRegistryService.AddSchema:output_type -> schema.v1.AddSchemaResponse
+	7,  // 13: schema.v1.SchemaRegistryService.UpsertSchema:output_type -> schema.v1.UpsertSchemaResponse
+	9,  // 14: schema.v1.SchemaRegistryService.DeleteSchema:output_type -> schema.v1.DeleteSchemaResponse
+	12, // [12:15] is the sub-list for method output_type
+	9,  // [9:12] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_schema_v1_schema_proto_init() }
@@ -703,7 +773,7 @@ func file_schema_v1_schema_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_schema_v1_schema_proto_rawDesc), len(file_schema_v1_schema_proto_rawDesc)),
-			NumEnums:      2,
+			NumEnums:      3,
 			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
