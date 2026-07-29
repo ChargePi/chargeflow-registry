@@ -12,7 +12,6 @@ import (
 	schemav1 "github.com/ChargePi/chargeflow-registry/gen/proto/schema/v1"
 	grpcHandler "github.com/ChargePi/chargeflow-registry/internal/grpc"
 	"github.com/ChargePi/chargeflow-registry/internal/grpc/adminserver"
-	"github.com/ChargePi/chargeflow-registry/internal/grpc/auth"
 	mcpHandler "github.com/ChargePi/chargeflow-registry/internal/mcp"
 	"github.com/ChargePi/chargeflow-registry/internal/schema"
 	postgresStorage "github.com/ChargePi/chargeflow-registry/internal/storage/postgres"
@@ -100,8 +99,6 @@ var (
 			schemaSvc := schema.NewService(repo, cache)
 			validationSvc := validation.NewService(schemaSvc, logger)
 
-			authInterceptor := auth.NewInterceptor([]byte(cfg.Auth.JWTSecret))
-
 			recoveryHandler := func(p any) error {
 				logger.Error("recovered from panic", zap.Any("panic", p), zap.String("stack", string(debug.Stack())))
 				return status.Errorf(codes.Internal, "%s", p)
@@ -112,12 +109,10 @@ var (
 				grpc.ChainUnaryInterceptor(
 					grpc_zap.UnaryServerInterceptor(logger),
 					grpc_recovery.UnaryServerInterceptor(grpc_recovery.WithRecoveryHandler(recoveryHandler)),
-					authInterceptor.Unary(),
 				),
 				grpc.ChainStreamInterceptor(
 					grpc_zap.StreamServerInterceptor(logger),
 					grpc_recovery.StreamServerInterceptor(grpc_recovery.WithRecoveryHandler(recoveryHandler)),
-					authInterceptor.Stream(),
 				),
 			)
 
@@ -139,8 +134,8 @@ var (
 			defer grpcServer.GracefulStop()
 
 			// AdminAPI is served on its own gRPC server/port so it can be network-isolated
-			// from the general registry API independently of role-based auth.
-			adminGrpcServer := adminserver.NewServer(logger, authInterceptor, schemaSvc)
+			// from the general registry API.
+			adminGrpcServer := adminserver.NewServer(logger, schemaSvc)
 			if err := adminGrpcServer.Start(cfg.AdminGRPC.Address); err != nil {
 				logger.Fatal("failed to start admin gRPC server", zap.Error(err))
 			}
@@ -174,7 +169,6 @@ func setDefaults() {
 	viper.SetDefault("redis.address", "localhost:6379")
 	viper.SetDefault("redis.db", 0)
 	viper.SetDefault("redis.cacheTtl", time.Hour)
-	_ = viper.BindEnv("auth.jwtSecret", "CHARGEFLOW_REGISTRY_AUTH_JWTSECRET")
 	_ = viper.BindEnv("database.dsn", "CHARGEFLOW_REGISTRY_DATABASE_DSN")
 	_ = viper.BindEnv("redis.address", "CHARGEFLOW_REGISTRY_REDIS_ADDRESS")
 	_ = viper.BindEnv("redis.password", "CHARGEFLOW_REGISTRY_REDIS_PASSWORD")

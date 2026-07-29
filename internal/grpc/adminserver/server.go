@@ -20,7 +20,6 @@ import (
 
 	adminv1 "github.com/ChargePi/chargeflow-registry/gen/proto/admin/v1"
 	grpcHandler "github.com/ChargePi/chargeflow-registry/internal/grpc"
-	"github.com/ChargePi/chargeflow-registry/internal/grpc/auth"
 )
 
 // Server wraps the gRPC server exposing the AdminAPI.
@@ -29,9 +28,9 @@ type Server struct {
 	logger     *zap.Logger
 }
 
-// NewServer builds a gRPC server with tracing, logging, recovery, and JWT/role
+// NewServer builds a gRPC server with tracing, logging, and recovery
 // interceptors, with the health and admin services registered.
-func NewServer(logger *zap.Logger, authInterceptor *auth.Interceptor, adminSvc grpcHandler.AdminService) *Server {
+func NewServer(logger *zap.Logger, adminSvc grpcHandler.AdminService) *Server {
 	logger = logger.Named("admin-grpc-server")
 
 	recoveryHandler := func(p any) error {
@@ -44,12 +43,10 @@ func NewServer(logger *zap.Logger, authInterceptor *auth.Interceptor, adminSvc g
 		grpc.ChainUnaryInterceptor(
 			grpc_zap.UnaryServerInterceptor(logger),
 			grpc_recovery.UnaryServerInterceptor(grpc_recovery.WithRecoveryHandler(recoveryHandler)),
-			authInterceptor.Unary(),
 		),
 		grpc.ChainStreamInterceptor(
 			grpc_zap.StreamServerInterceptor(logger),
 			grpc_recovery.StreamServerInterceptor(grpc_recovery.WithRecoveryHandler(recoveryHandler)),
-			authInterceptor.Stream(),
 		),
 	)
 
