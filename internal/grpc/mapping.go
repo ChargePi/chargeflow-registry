@@ -102,3 +102,19 @@ func schemasToProto(schemas []*schema.Schema) []*schemav1.Schema {
 	}
 	return out
 }
+
+func vendorModelToProto(vm *schema.VendorModel) *schemav1.VendorModel {
+	return &schemav1.VendorModel{
+		OcppVersion: ocppVersionToProto(vm.OCPPVersion),
+		Vendor:      vm.Vendor,
+		Model:       vm.Model,
+	}
+}
+
+func vendorModelsToProto(vendorModels []*schema.VendorModel) []*schemav1.VendorModel {
+	out := make([]*schemav1.VendorModel, len(vendorModels))
+	for i, vm := range vendorModels {
+		out[i] = vendorModelToProto(vm)
+	}
+	return out
+}

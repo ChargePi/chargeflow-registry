@@ -43,3 +43,10 @@ type Schema struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
+
+// VendorModel identifies a charge point model available for a given OCPP version.
+type VendorModel struct {
+	OCPPVersion OCPPVersion
+	Vendor      string
+	Model       string
+}

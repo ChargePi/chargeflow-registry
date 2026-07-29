@@ -21,6 +21,9 @@ type SchemaRegistryServiceClient interface {
 	AddSchema(ctx context.Context, in *AddSchemaRequest, opts ...grpc.CallOption) (*AddSchemaResponse, error)
 	UpsertSchema(ctx context.Context, in *UpsertSchemaRequest, opts ...grpc.CallOption) (*UpsertSchemaResponse, error)
 	DeleteSchema(ctx context.Context, in *DeleteSchemaRequest, opts ...grpc.CallOption) (*DeleteSchemaResponse, error)
+	// ListVendorModels returns the OCPP version, vendor, and model combinations
+	// available for the given vendor, optionally filtered to a set of models.
+	ListVendorModels(ctx context.Context, in *ListVendorModelsRequest, opts ...grpc.CallOption) (*ListVendorModelsResponse, error)
 }
 
 type schemaRegistryServiceClient struct {
@@ -58,6 +61,15 @@ func (c *schemaRegistryServiceClient) DeleteSchema(ctx context.Context, in *Dele
 	return out, nil
 }
 
+func (c *schemaRegistryServiceClient) ListVendorModels(ctx context.Context, in *ListVendorModelsRequest, opts ...grpc.CallOption) (*ListVendorModelsResponse, error) {
+	out := new(ListVendorModelsResponse)
+	err := c.cc.Invoke(ctx, "/schema.v1.SchemaRegistryService/ListVendorModels", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SchemaRegistryServiceServer is the server API for SchemaRegistryService service.
 // All implementations must embed UnimplementedSchemaRegistryServiceServer
 // for forward compatibility
@@ -65,6 +77,9 @@ type SchemaRegistryServiceServer interface {
 	AddSchema(context.Context, *AddSchemaRequest) (*AddSchemaResponse, error)
 	UpsertSchema(context.Context, *UpsertSchemaRequest) (*UpsertSchemaResponse, error)
 	DeleteSchema(context.Context, *DeleteSchemaRequest) (*DeleteSchemaResponse, error)
+	// ListVendorModels returns the OCPP version, vendor, and model combinations
+	// available for the given vendor, optionally filtered to a set of models.
+	ListVendorModels(context.Context, *ListVendorModelsRequest) (*ListVendorModelsResponse, error)
 	mustEmbedUnimplementedSchemaRegistryServiceServer()
 }
 
@@ -80,6 +95,9 @@ func (UnimplementedSchemaRegistryServiceServer) UpsertSchema(context.Context, *U
 }
 func (UnimplementedSchemaRegistryServiceServer) DeleteSchema(context.Context, *DeleteSchemaRequest) (*DeleteSchemaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteSchema not implemented")
+}
+func (UnimplementedSchemaRegistryServiceServer) ListVendorModels(context.Context, *ListVendorModelsRequest) (*ListVendorModelsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListVendorModels not implemented")
 }
 func (UnimplementedSchemaRegistryServiceServer) mustEmbedUnimplementedSchemaRegistryServiceServer() {}
 
@@ -148,6 +166,24 @@ func _SchemaRegistryService_DeleteSchema_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SchemaRegistryService_ListVendorModels_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListVendorModelsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchemaRegistryServiceServer).ListVendorModels(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/schema.v1.SchemaRegistryService/ListVendorModels",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchemaRegistryServiceServer).ListVendorModels(ctx, req.(*ListVendorModelsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SchemaRegistryService_ServiceDesc is the grpc.ServiceDesc for SchemaRegistryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -166,6 +202,10 @@ var SchemaRegistryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteSchema",
 			Handler:    _SchemaRegistryService_DeleteSchema_Handler,
+		},
+		{
+			MethodName: "ListVendorModels",
+			Handler:    _SchemaRegistryService_ListVendorModels_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
