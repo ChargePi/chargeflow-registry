@@ -14,7 +14,7 @@ import (
 )
 
 type AdminService interface {
-	List(ctx context.Context, version schema.OCPPVersion, vendor, model *string, status *schema.Status, limit, offset uint32) ([]*schema.Schema, int64, error)
+	List(ctx context.Context, version schema.OCPPVersion, vendor, model, action *string, msgType *schema.MessageType, status *schema.Status, limit, offset uint32) ([]*schema.Schema, int64, error)
 	ChangeStatus(ctx context.Context, id uuid.UUID, status schema.Status) (*schema.Schema, error)
 }
 
@@ -46,7 +46,7 @@ func (h *AdminHandler) ListSchemas(ctx context.Context, req *adminv1.ListSchemas
 
 	// version, vendor, and model are left unfiltered so admins can review
 	// submissions across the whole registry, not just one version/vendor/model.
-	schemas, total, err := h.service.List(ctx, "", nil, nil, st, limit, offset)
+	schemas, total, err := h.service.List(ctx, "", nil, nil, nil, nil, st, limit, offset)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

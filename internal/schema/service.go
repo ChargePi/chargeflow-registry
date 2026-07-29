@@ -126,14 +126,14 @@ func (s *Service) deleteOne(ctx context.Context, version OCPPVersion, action str
 }
 
 // List returns schemas matching the given filters, paginated. An empty version,
-// nil vendor/model, or nil status is treated as "any" for that field.
-func (s *Service) List(ctx context.Context, version OCPPVersion, vendor, model *string, status *Status, limit, offset uint32) ([]*Schema, int64, error) {
+// nil vendor/model/action/status, or nil msgType is treated as "any" for that field.
+func (s *Service) List(ctx context.Context, version OCPPVersion, vendor, model, action *string, msgType *MessageType, status *Status, limit, offset uint32) ([]*Schema, int64, error) {
 	ctx, span := tracer.Start(ctx, "schema.List", trace.WithAttributes(
 		ocppVersionAttr(version),
 	))
 	defer span.End()
 
-	schemas, total, err := s.repo.List(ctx, version, vendor, model, status, clampPageSize(limit), offset)
+	schemas, total, err := s.repo.List(ctx, version, vendor, model, action, msgType, status, clampPageSize(limit), offset)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())

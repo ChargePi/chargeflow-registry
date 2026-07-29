@@ -24,10 +24,10 @@ type Repository interface {
 	// schema first and falls back to the generic (nil vendor/model) one.
 	Get(ctx context.Context, version OCPPVersion, action string, msgType MessageType, vendor, model *string) (*Schema, error)
 	// List returns schemas matching the given filters, paginated. An empty version,
-	// nil vendor/model, or nil status is treated as "any" for that field. Returns
-	// the page of results plus the total count of matching rows, ignoring
-	// limit/offset.
-	List(ctx context.Context, version OCPPVersion, vendor, model *string, status *Status, limit, offset uint32) ([]*Schema, int64, error)
+	// nil vendor/model/action/status, or nil msgType is treated as "any" for that
+	// field. Returns the page of results plus the total count of matching rows,
+	// ignoring limit/offset.
+	List(ctx context.Context, version OCPPVersion, vendor, model, action *string, msgType *MessageType, status *Status, limit, offset uint32) ([]*Schema, int64, error)
 	// Add inserts a new schema. Returns ErrAlreadyExists if the exact key already exists.
 	Add(ctx context.Context, schema *Schema) error
 	Upsert(ctx context.Context, schema *Schema) error

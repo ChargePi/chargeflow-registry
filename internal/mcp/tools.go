@@ -260,7 +260,7 @@ func (h *handlers) querySchemas(ctx context.Context, req mcplib.CallToolRequest)
 	model := optionalString(req.GetArguments()["model"])
 
 	// The MCP API is user-facing, so only admin-verified schemas are ever listed here.
-	schemas, _, err := h.schemaSvc.List(ctx, schema.OCPPVersion(versionStr), vendor, model, lo.ToPtr(schema.StatusVerified), schema.MaxPageSize, 0)
+	schemas, _, err := h.schemaSvc.List(ctx, schema.OCPPVersion(versionStr), vendor, model, nil, nil, lo.ToPtr(schema.StatusVerified), schema.MaxPageSize, 0)
 	if err != nil {
 		return mcplib.NewToolResultError(fmt.Sprintf("failed to query schemas: %s", err)), nil
 	}

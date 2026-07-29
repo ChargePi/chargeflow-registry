@@ -16,6 +16,7 @@ type SchemaService interface {
 	Upsert(ctx context.Context, s *schema.Schema) error
 	Delete(ctx context.Context, version schema.OCPPVersion, action string, vendor, model *string) error
 	ListVendorModels(ctx context.Context, vendor string, models []string, limit, offset uint32) ([]*schema.VendorModel, int64, error)
+	List(ctx context.Context, version schema.OCPPVersion, vendor, model, action *string, msgType *schema.MessageType, status *schema.Status, limit, offset uint32) ([]*schema.Schema, int64, error)
 }
 
 type Handler struct {
@@ -171,5 +172,49 @@ func (h *Handler) ListVendorModels(ctx context.Context, req *schemav1.ListVendor
 		VendorModels:  vendorModelsToProto(vendorModels),
 		TotalSize:     total,
 		NextPageToken: pagination.NextToken(offset, len(vendorModels), total),
+	}, nil
+}
+
+// SearchSchemas searches verified schemas, optionally filtered by OCPP
+// version, vendor, model, action, and message type. An unset ocpp_version
+// matches any version, and an unspecified message_type returns both request
+// and response schemas.
+func (h *Handler) SearchSchemas(ctx context.Context, req *schemav1.SearchSchemasRequest) (*schemav1.SearchSchemasResponse, error) {
+	var version schema.OCPPVersion
+	if req.OcppVersion != nil {
+		if _, ok := schemav1.OcppVersion_name[int32(*req.OcppVersion)]; !ok {
+			return nil, status.Error(codes.InvalidArgument, "unknown ocpp_version")
+		}
+		if *req.OcppVersion == schemav1.OcppVersion_OCPP_VERSION_UNSPECIFIED {
+			return nil, status.Error(codes.InvalidArgument, "ocpp_version, if set, must not be unspecified")
+		}
+		version = ocppVersionToDomain(*req.OcppVersion)
+	}
+	if err := validateVendorModel(req.Vendor, req.Model); err != nil {
+		return nil, err
+	}
+
+	offset, err := pagination.DecodeOffset(req.PageToken)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid page_token")
+	}
+	limit := pagination.ClampPageSize(int(req.PageSize), schema.DefaultPageSize, schema.MaxPageSize)
+
+	var msgType *schema.MessageType
+	if req.MessageType != schemav1.MessageType_MESSAGE_TYPE_UNSPECIFIED {
+		mt := messageTypeToDomain(req.MessageType)
+		msgType = &mt
+	}
+
+	verified := schema.StatusVerified
+	schemas, total, err := h.service.List(ctx, version, req.Vendor, req.Model, req.Action, msgType, &verified, limit, offset)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &schemav1.SearchSchemasResponse{
+		Schemas:       schemasToProto(schemas),
+		TotalSize:     total,
+		NextPageToken: pagination.NextToken(offset, len(schemas), total),
 	}, nil
 }
