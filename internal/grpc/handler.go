@@ -154,6 +154,9 @@ func (h *Handler) ListVendorModels(ctx context.Context, req *schemav1.ListVendor
 
 	vendorModels, err := h.service.ListVendorModels(ctx, req.Vendor, req.Models)
 	if err != nil {
+		if errors.Is(err, schema.ErrNotFound) {
+			return nil, status.Error(codes.NotFound, "no models found for vendor")
+		}
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 

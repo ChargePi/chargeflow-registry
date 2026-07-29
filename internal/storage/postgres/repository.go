@@ -143,6 +143,9 @@ func (r *SchemaRepository) ListVendorModels(ctx context.Context, vendor string, 
 	if err := query.Order("ocpp_version, model").Find(&entities).Error; err != nil {
 		return nil, fmt.Errorf("list vendor models: %w", err)
 	}
+	if len(entities) == 0 {
+		return nil, schema.ErrNotFound
+	}
 
 	vendorModels := make([]*schema.VendorModel, len(entities))
 	for i, e := range entities {
