@@ -2,7 +2,9 @@ SERVICE_NAME := chargeflow-registry
 GO           := go
 GOFLAGS      :=
 
-.PHONY: build run test lint generate proto mocks clean
+DOCKER_COMPOSE := docker compose -f deployments/docker/docker-compose.yaml -f deployments/docker/docker-compose.observability.yaml
+
+.PHONY: build run test lint generate proto mocks clean docker-up docker-down
 
 build:
 	$(GO) build $(GOFLAGS) -o bin/$(SERVICE_NAME) ./cmd/app
@@ -29,3 +31,9 @@ mocks:
 
 clean:
 	rm -rf bin/ unit_coverage.out integration_coverage.out
+
+docker-up:
+	$(DOCKER_COMPOSE) up -d --build
+
+docker-down:
+	$(DOCKER_COMPOSE) down

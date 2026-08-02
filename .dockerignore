@@ -13,6 +13,8 @@ docs/
 build/
 features/
 deployments/
+!deployments/migrations/
+!deployments/migrations/**
 README.md
 Makefile
 scripts
