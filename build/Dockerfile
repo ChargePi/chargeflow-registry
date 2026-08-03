@@ -11,15 +11,19 @@ ENV GOPRIVATE=github.com/ChargePi/*
 # Leverage build cache by copying go.mod and go.sum first
 COPY go.mod go.sum ./
 
-RUN --mount=type=secret,id=gh_token,required=true \
+RUN apt-get update && apt-get install -y --no-install-recommends openssh-client && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p -m 0700 /root/.ssh && ssh-keyscan github.com >> /root/.ssh/known_hosts
+
+RUN --mount=type=ssh,required=true \
     --mount=type=cache,target="/root/.cache/go-build" \
-    git config --global url."https://x-access-token:$(cat /run/secrets/gh_token)@github.com/".insteadOf "https://github.com/" && \
+    git config --global url."git@github.com:".insteadOf "https://github.com/" && \
     go mod download && go mod verify
 
 # Copy the rest of the source code
 COPY . .
 
 RUN --mount=type=cache,target="/root/.cache/go-build" go build -o ../chargeflow-registry ./cmd/app
+RUN --mount=type=cache,target="/root/.cache/go-build" go build -o ../migrate ./cmd/migrate
 
 # Debug stage using Delve
 FROM build AS debug
@@ -60,3 +64,18 @@ HEALTHCHECK --interval=5s --timeout=3s --retries=3 \
     CMD curl --fail http://localhost:80/healthz || exit 1
 
 CMD ["/usr/local/bin/chargeflow-registry"]
+
+FROM alpine:3.21 AS migrate
+
+RUN apk add --no-cache ca-certificates
+
+ARG user=app
+ARG group=docker
+RUN addgroup -S $group && adduser -S -G $group $user
+USER $user
+WORKDIR /usr/local/service
+
+COPY --chown=$user:$group --from=build /app/migrate /usr/local/bin/migrate
+RUN chmod +x /usr/local/bin/migrate
+
+CMD ["/usr/local/bin/migrate"]

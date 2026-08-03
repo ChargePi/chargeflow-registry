@@ -28,17 +28,18 @@ services:
       retries: 5
 
   migrate:
-    image: postgres:17-alpine
+    build:
+      context: ../../
+      dockerfile: build/Dockerfile
+      target: migrate
+      ssh:
+        - default
+        - ssh=~/.ssh/id_ed25519
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - ../../deployments/migrations:/migrations
     environment:
-      PGPASSWORD: ${POSTGRES_PASSWORD:-registry}
-    command: >
-      sh -c "for f in $(ls /migrations/*.sql | sort); do
-        echo \"Applying $$f\"; psql -h postgres -U ${POSTGRES_USER:-registry} -d ${POSTGRES_DB:-registry} -f $$f; done"
+      CHARGEFLOW_REGISTRY_DATABASE_DSN: postgres://${POSTGRES_USER:-registry}:${POSTGRES_PASSWORD:-registry}@postgres:5432/${POSTGRES_DB:-registry}?sslmode=disable
     restart: on-failure
 
   chargeflow-registry:
