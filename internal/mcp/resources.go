@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/ChargePi/chargeflow-registry/internal/schema"
@@ -14,8 +15,8 @@ import (
 )
 
 const (
-	schemaURITemplate  = "schema://{version}/{action}/{type}"
-	schemasURITemplate = "schemas://{version}"
+	schemaURITemplate  = "schema://{version}/{action}/{type}{?vendor,model}"
+	schemasURITemplate = "schemas://{version}{?vendor,model,action,message_type}"
 )
 
 func registerResources(s *server.MCPServer, h *handlers) {
@@ -23,7 +24,7 @@ func registerResources(s *server.MCPServer, h *handlers) {
 		mcplib.NewResourceTemplate(
 			schemaURITemplate,
 			"OCPP Schema",
-			mcplib.WithTemplateDescription("A registered OCPP JSON schema identified by version, action, and message type. Example: schema://1.6/Authorize/request"),
+			mcplib.WithTemplateDescription("A registered OCPP JSON schema identified by version, action, and message type, optionally scoped to a vendor and model. Example: schema://1.6/Authorize/request?vendor=ABB&model=Terra54"),
 			mcplib.WithTemplateMIMEType("application/json"),
 		),
 		h.readSchema,
@@ -33,22 +34,22 @@ func registerResources(s *server.MCPServer, h *handlers) {
 		mcplib.NewResourceTemplate(
 			schemasURITemplate,
 			"OCPP Schemas List",
-			mcplib.WithTemplateDescription("All registered OCPP schemas for a given OCPP version. Example: schemas://1.6"),
+			mcplib.WithTemplateDescription(`All registered OCPP schemas for a given OCPP version, optionally filtered by vendor, model, action, and message_type ("request" or "response"). Example: schemas://1.6?vendor=ABB&action=Authorize&message_type=request`),
 			mcplib.WithTemplateMIMEType("application/json"),
 		),
 		h.listSchemas,
 	)
 }
 
-// readSchema handles schema://{version}/{action}/{type}
-// URI example: schema://1.6/Authorize/request
+// readSchema handles schema://{version}/{action}/{type}{?vendor,model}
+// URI example: schema://1.6/Authorize/request?vendor=ABB&model=Terra54
 func (h *handlers) readSchema(ctx context.Context, req mcplib.ReadResourceRequest) ([]mcplib.ResourceContents, error) {
-	version, action, msgType, err := parseSchemaURI(req.Params.URI)
+	version, action, msgType, filter, err := parseSchemaURI(req.Params.URI)
 	if err != nil {
 		return nil, err
 	}
 
-	sc, err := h.schemaSvc.Get(ctx, schema.OCPPVersion(version), action, schema.MessageType(msgType), nil, nil)
+	sc, err := h.schemaSvc.Get(ctx, schema.OCPPVersion(version), action, schema.MessageType(msgType), filter.Vendor, filter.Model)
 	if err != nil {
 		if errors.Is(err, schema.ErrNotFound) {
 			return nil, fmt.Errorf("schema not found: %s", req.Params.URI)
@@ -70,16 +71,16 @@ func (h *handlers) readSchema(ctx context.Context, req mcplib.ReadResourceReques
 	}, nil
 }
 
-// listSchemas handles schemas://{version}
-// URI example: schemas://1.6
+// listSchemas handles schemas://{version}{?vendor,model,action,message_type}
+// URI example: schemas://1.6?vendor=ABB&model=Terra54&action=Authorize&message_type=request
 func (h *handlers) listSchemas(ctx context.Context, req mcplib.ReadResourceRequest) ([]mcplib.ResourceContents, error) {
-	version, err := parseSchemasURI(req.Params.URI)
+	version, filter, err := parseSchemasURI(req.Params.URI)
 	if err != nil {
 		return nil, err
 	}
 
 	// The MCP API is user-facing, so only admin-verified schemas are ever listed here.
-	schemas, _, err := h.schemaSvc.List(ctx, schema.OCPPVersion(version), nil, nil, nil, nil, lo.ToPtr(schema.StatusVerified), schema.MaxPageSize, 0)
+	schemas, _, err := h.schemaSvc.List(ctx, schema.OCPPVersion(version), filter.Vendor, filter.Model, filter.Action, filter.MessageType, lo.ToPtr(schema.StatusVerified), schema.MaxPageSize, 0)
 	if err != nil {
 		return nil, fmt.Errorf("list schemas: %w", err)
 	}
@@ -98,23 +99,62 @@ func (h *handlers) listSchemas(ctx context.Context, req mcplib.ReadResourceReque
 	}, nil
 }
 
-// parseSchemaURI parses schema://{version}/{action}/{type} into its components.
-// Example: schema://1.6/Authorize/request → ("1.6", "Authorize", "request")
-func parseSchemaURI(uri string) (version, action, msgType string, err error) {
-	path := strings.TrimPrefix(uri, "schema://")
-	parts := strings.SplitN(path, "/", 3)
-	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-		return "", "", "", fmt.Errorf("invalid schema URI %q: expected schema://{version}/{action}/{type}", uri)
-	}
-	return parts[0], parts[1], parts[2], nil
+// schemaFilter holds the optional query-string filters shared by the schema:// and schemas:// resource templates.
+type schemaFilter struct {
+	Vendor      *string
+	Model       *string
+	Action      *string
+	MessageType *schema.MessageType
 }
 
-// parseSchemasURI parses schemas://{version} and returns the version.
-// Example: schemas://1.6 → "1.6"
-func parseSchemasURI(uri string) (string, error) {
-	version := strings.TrimPrefix(uri, "schemas://")
-	if version == "" || version == uri {
-		return "", fmt.Errorf("invalid schemas URI %q: expected schemas://{version}", uri)
+// parseSchemaURI parses schema://{version}/{action}/{type}{?vendor,model} into its components.
+// Example: schema://1.6/Authorize/request?vendor=ABB&model=Terra54 → ("1.6", "Authorize", "request", {Vendor: "ABB", Model: "Terra54"})
+func parseSchemaURI(uri string) (version, action, msgType string, filter schemaFilter, err error) {
+	u, err := url.Parse(uri)
+	if err != nil || u.Scheme != "schema" {
+		return "", "", "", schemaFilter{}, fmt.Errorf("invalid schema URI %q: expected schema://{version}/{action}/{type}", uri)
 	}
-	return version, nil
+
+	path := strings.TrimPrefix(u.Path, "/")
+	parts := strings.SplitN(path, "/", 2)
+	if u.Host == "" || len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", "", schemaFilter{}, fmt.Errorf("invalid schema URI %q: expected schema://{version}/{action}/{type}", uri)
+	}
+
+	return u.Host, parts[0], parts[1], parseSchemaFilter(u.RawQuery), nil
+}
+
+// parseSchemasURI parses schemas://{version}{?vendor,model,action,message_type} and returns the version and optional filters.
+// Example: schemas://1.6?vendor=ABB&action=Authorize&message_type=request → ("1.6", {Vendor: "ABB", Action: "Authorize", MessageType: "request"})
+func parseSchemasURI(uri string) (version string, filter schemaFilter, err error) {
+	u, err := url.Parse(uri)
+	if err != nil || u.Scheme != "schemas" || u.Host == "" {
+		return "", schemaFilter{}, fmt.Errorf("invalid schemas URI %q: expected schemas://{version}", uri)
+	}
+
+	return u.Host, parseSchemaFilter(u.RawQuery), nil
+}
+
+// parseSchemaFilter extracts the optional vendor, model, action, and message_type filters from a URI's raw query string.
+func parseSchemaFilter(rawQuery string) schemaFilter {
+	values, err := url.ParseQuery(rawQuery)
+	if err != nil {
+		return schemaFilter{}
+	}
+
+	var filter schemaFilter
+	if v := values.Get("vendor"); v != "" {
+		filter.Vendor = &v
+	}
+	if m := values.Get("model"); m != "" {
+		filter.Model = &m
+	}
+	if a := values.Get("action"); a != "" {
+		filter.Action = &a
+	}
+	if mt := values.Get("message_type"); mt != "" {
+		msgType := schema.MessageType(mt)
+		filter.MessageType = &msgType
+	}
+	return filter
 }
