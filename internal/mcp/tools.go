@@ -129,7 +129,7 @@ func newGetSchemaTool() mcplib.Tool {
 
 func newQuerySchemasTool() mcplib.Tool {
 	return mcplib.NewTool("query_schemas",
-		mcplib.WithDescription("List all registered OCPP schemas for a given version, optionally filtered by vendor and model"),
+		mcplib.WithDescription("List all registered OCPP schemas for a given version, optionally filtered by vendor, model, action, and message type"),
 		mcplib.WithString("ocpp_version",
 			mcplib.Required(),
 			mcplib.Description(`OCPP version to query: "1.6", "2.0.1", or "2.1"`),
@@ -141,6 +141,13 @@ func newQuerySchemasTool() mcplib.Tool {
 		mcplib.WithString("model",
 			mcplib.Description("Optional EV model identifier filter"),
 		),
+		mcplib.WithString("action",
+			mcplib.Description("Optional OCPP action name filter"),
+		),
+		mcplib.WithString("message_type",
+			mcplib.Description(`Optional message direction filter: "request" or "response"`),
+			mcplib.Enum("request", "response"),
+		),
 	)
 }
 
@@ -149,15 +156,14 @@ func (h *handlers) schemaValidation(ctx context.Context, req mcplib.CallToolRequ
 	action := req.GetString("action", "")
 	msgTypeStr := req.GetString("message_type", "")
 	message := req.GetString("message", "")
-	vendor := optionalString(req.GetArguments()["vendor"])
-	model := optionalString(req.GetArguments()["model"])
+	filter := parseToolFilter(req.GetArguments())
 
 	result, err := h.validationSvc.ValidateMessage(ctx, validation.Request{
 		Version:     schema.OCPPVersion(versionStr),
 		Action:      action,
 		MessageType: schema.MessageType(msgTypeStr),
-		Vendor:      vendor,
-		Model:       model,
+		Vendor:      filter.Vendor,
+		Model:       filter.Model,
 		Message:     []byte(message),
 	})
 	if err != nil {
@@ -180,23 +186,22 @@ func (h *handlers) registerSchema(ctx context.Context, req mcplib.CallToolReques
 	action := req.GetString("action", "")
 	requestSchemaStr := req.GetString("request_schema", "")
 	responseSchemaStr := req.GetString("response_schema", "")
-	vendor := optionalString(req.GetArguments()["vendor"])
-	model := optionalString(req.GetArguments()["model"])
+	filter := parseToolFilter(req.GetArguments())
 
 	reqSchema := &schema.Schema{
 		OCPPVersion: schema.OCPPVersion(versionStr),
 		Action:      action,
 		MessageType: schema.MessageTypeRequest,
-		Vendor:      vendor,
-		Model:       model,
+		Vendor:      filter.Vendor,
+		Model:       filter.Model,
 		Schema:      json.RawMessage(requestSchemaStr),
 	}
 	respSchema := &schema.Schema{
 		OCPPVersion: schema.OCPPVersion(versionStr),
 		Action:      action,
 		MessageType: schema.MessageTypeResponse,
-		Vendor:      vendor,
-		Model:       model,
+		Vendor:      filter.Vendor,
+		Model:       filter.Model,
 		Schema:      json.RawMessage(responseSchemaStr),
 	}
 
@@ -213,10 +218,9 @@ func (h *handlers) registerSchema(ctx context.Context, req mcplib.CallToolReques
 func (h *handlers) removeSchema(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
 	versionStr := req.GetString("ocpp_version", "")
 	action := req.GetString("action", "")
-	vendor := optionalString(req.GetArguments()["vendor"])
-	model := optionalString(req.GetArguments()["model"])
+	filter := parseToolFilter(req.GetArguments())
 
-	if err := h.schemaSvc.Delete(ctx, schema.OCPPVersion(versionStr), action, vendor, model); err != nil {
+	if err := h.schemaSvc.Delete(ctx, schema.OCPPVersion(versionStr), action, filter.Vendor, filter.Model); err != nil {
 		if errors.Is(err, schema.ErrNotFound) {
 			return mcplib.NewToolResultError("schema not found"), nil
 		}
@@ -230,14 +234,13 @@ func (h *handlers) getSchema(ctx context.Context, req mcplib.CallToolRequest) (*
 	versionStr := req.GetString("ocpp_version", "")
 	action := req.GetString("action", "")
 	msgTypeStr := req.GetString("message_type", "")
-	vendor := optionalString(req.GetArguments()["vendor"])
-	model := optionalString(req.GetArguments()["model"])
+	filter := parseToolFilter(req.GetArguments())
 
 	sc, err := h.schemaSvc.Get(ctx,
 		schema.OCPPVersion(versionStr),
 		action,
 		schema.MessageType(msgTypeStr),
-		vendor, model,
+		filter.Vendor, filter.Model,
 	)
 	if err != nil {
 		if errors.Is(err, schema.ErrNotFound) {
@@ -256,11 +259,10 @@ func (h *handlers) getSchema(ctx context.Context, req mcplib.CallToolRequest) (*
 
 func (h *handlers) querySchemas(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
 	versionStr := req.GetString("ocpp_version", "")
-	vendor := optionalString(req.GetArguments()["vendor"])
-	model := optionalString(req.GetArguments()["model"])
+	filter := parseToolFilter(req.GetArguments())
 
 	// The MCP API is user-facing, so only admin-verified schemas are ever listed here.
-	schemas, _, err := h.schemaSvc.List(ctx, schema.OCPPVersion(versionStr), vendor, model, nil, nil, lo.ToPtr(schema.StatusVerified), schema.MaxPageSize, 0)
+	schemas, _, err := h.schemaSvc.List(ctx, schema.OCPPVersion(versionStr), filter.Vendor, filter.Model, filter.Action, filter.MessageType, lo.ToPtr(schema.StatusVerified), schema.MaxPageSize, 0)
 	if err != nil {
 		return mcplib.NewToolResultError(fmt.Sprintf("failed to query schemas: %s", err)), nil
 	}
@@ -271,6 +273,21 @@ func (h *handlers) querySchemas(ctx context.Context, req mcplib.CallToolRequest)
 	}
 
 	return mcplib.NewToolResultText(string(out)), nil
+}
+
+// parseToolFilter extracts the optional vendor, model, action, and message_type filter
+// arguments shared across schema tool calls into a schemaFilter.
+func parseToolFilter(args map[string]any) schemaFilter {
+	filter := schemaFilter{
+		Vendor: optionalString(args["vendor"]),
+		Model:  optionalString(args["model"]),
+		Action: optionalString(args["action"]),
+	}
+	if msgType := optionalString(args["message_type"]); msgType != nil {
+		mt := schema.MessageType(*msgType)
+		filter.MessageType = &mt
+	}
+	return filter
 }
 
 func optionalString(v any) *string {
