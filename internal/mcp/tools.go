@@ -19,6 +19,7 @@ func registerTools(s *server.MCPServer, h *handlers) {
 	s.AddTool(newRemoveSchemaTool(), h.removeSchema)
 	s.AddTool(newGetSchemaTool(), h.getSchema)
 	s.AddTool(newQuerySchemasTool(), h.querySchemas)
+	s.AddTool(newListSchemaVersionsTool(), h.listSchemaVersions)
 }
 
 func newSchemaValidationTool() mcplib.Tool {
@@ -104,6 +105,35 @@ func newRemoveSchemaTool() mcplib.Tool {
 func newGetSchemaTool() mcplib.Tool {
 	return mcplib.NewTool("get_schema",
 		mcplib.WithDescription("Retrieve a specific OCPP JSON schema by version, action, and message type"),
+		mcplib.WithString("ocpp_version",
+			mcplib.Required(),
+			mcplib.Description(`OCPP version: "1.6", "2.0.1", or "2.1"`),
+			mcplib.Enum("1.6", "2.0.1", "2.1"),
+		),
+		mcplib.WithString("action",
+			mcplib.Required(),
+			mcplib.Description("OCPP action name"),
+		),
+		mcplib.WithString("message_type",
+			mcplib.Required(),
+			mcplib.Description(`Message direction: "request" or "response"`),
+			mcplib.Enum("request", "response"),
+		),
+		mcplib.WithString("vendor",
+			mcplib.Description("Optional EV manufacturer identifier for vendor-specific schema lookup"),
+		),
+		mcplib.WithString("model",
+			mcplib.Description("Optional EV model identifier (requires vendor)"),
+		),
+		mcplib.WithInteger("version",
+			mcplib.Description("Optional specific content version to fetch; omit for the latest version"),
+		),
+	)
+}
+
+func newListSchemaVersionsTool() mcplib.Tool {
+	return mcplib.NewTool("list_schema_versions",
+		mcplib.WithDescription("List the content version history (changelog) for a registered, verified OCPP schema, newest first"),
 		mcplib.WithString("ocpp_version",
 			mcplib.Required(),
 			mcplib.Description(`OCPP version: "1.6", "2.0.1", or "2.1"`),
@@ -234,14 +264,27 @@ func (h *handlers) getSchema(ctx context.Context, req mcplib.CallToolRequest) (*
 	versionStr := req.GetString("ocpp_version", "")
 	action := req.GetString("action", "")
 	msgTypeStr := req.GetString("message_type", "")
+	schemaVersion := req.GetInt("version", 0)
 	filter := parseToolFilter(req.GetArguments())
 
-	sc, err := h.schemaSvc.Get(ctx,
-		schema.OCPPVersion(versionStr),
-		action,
-		schema.MessageType(msgTypeStr),
-		filter.Vendor, filter.Model,
-	)
+	var sc *schema.Schema
+	var err error
+	if schemaVersion == 0 {
+		sc, err = h.schemaSvc.Get(ctx,
+			schema.OCPPVersion(versionStr),
+			action,
+			schema.MessageType(msgTypeStr),
+			filter.Vendor, filter.Model,
+		)
+	} else {
+		sc, err = h.schemaSvc.GetVersion(ctx,
+			schema.OCPPVersion(versionStr),
+			action,
+			schema.MessageType(msgTypeStr),
+			filter.Vendor, filter.Model,
+			schemaVersion,
+		)
+	}
 	if err != nil {
 		if errors.Is(err, schema.ErrNotFound) {
 			return mcplib.NewToolResultError("schema not found"), nil
@@ -252,6 +295,33 @@ func (h *handlers) getSchema(ctx context.Context, req mcplib.CallToolRequest) (*
 	out, err := json.Marshal(sc)
 	if err != nil {
 		return nil, fmt.Errorf("marshal schema: %w", err)
+	}
+
+	return mcplib.NewToolResultText(string(out)), nil
+}
+
+func (h *handlers) listSchemaVersions(ctx context.Context, req mcplib.CallToolRequest) (*mcplib.CallToolResult, error) {
+	versionStr := req.GetString("ocpp_version", "")
+	action := req.GetString("action", "")
+	msgTypeStr := req.GetString("message_type", "")
+	filter := parseToolFilter(req.GetArguments())
+
+	sc, err := h.schemaSvc.Get(ctx, schema.OCPPVersion(versionStr), action, schema.MessageType(msgTypeStr), filter.Vendor, filter.Model)
+	if err != nil {
+		if errors.Is(err, schema.ErrNotFound) {
+			return mcplib.NewToolResultError("schema not found"), nil
+		}
+		return mcplib.NewToolResultError(fmt.Sprintf("failed to look up schema: %s", err)), nil
+	}
+
+	versions, _, err := h.schemaSvc.ListVersions(ctx, sc.ID, schema.MaxPageSize, 0)
+	if err != nil {
+		return mcplib.NewToolResultError(fmt.Sprintf("failed to list schema versions: %s", err)), nil
+	}
+
+	out, err := json.Marshal(versions)
+	if err != nil {
+		return nil, fmt.Errorf("marshal versions: %w", err)
 	}
 
 	return mcplib.NewToolResultText(string(out)), nil

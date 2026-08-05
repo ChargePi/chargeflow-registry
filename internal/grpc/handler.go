@@ -7,6 +7,7 @@ import (
 	schemav1 "github.com/ChargePi/chargeflow-registry/gen/proto/schema/v1"
 	"github.com/ChargePi/chargeflow-registry/internal/pagination"
 	"github.com/ChargePi/chargeflow-registry/internal/schema"
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -17,6 +18,7 @@ type SchemaService interface {
 	Delete(ctx context.Context, version schema.OCPPVersion, action string, vendor, model *string) error
 	ListVendorModels(ctx context.Context, vendor string, models []string, limit, offset uint32) ([]*schema.VendorModel, int64, error)
 	List(ctx context.Context, version schema.OCPPVersion, vendor, model, action *string, msgType *schema.MessageType, status *schema.Status, limit, offset uint32) ([]*schema.Schema, int64, error)
+	ListVersions(ctx context.Context, id uuid.UUID, limit, offset uint32) ([]*schema.SchemaVersion, int64, error)
 }
 
 type Handler struct {
@@ -216,5 +218,30 @@ func (h *Handler) SearchSchemas(ctx context.Context, req *schemav1.SearchSchemas
 		Schemas:       schemasToProto(schemas),
 		TotalSize:     total,
 		NextPageToken: pagination.NextToken(offset, len(schemas), total),
+	}, nil
+}
+
+// ListSchemaVersions returns the content changelog for a schema, newest first.
+func (h *Handler) ListSchemaVersions(ctx context.Context, req *schemav1.ListSchemaVersionsRequest) (*schemav1.ListSchemaVersionsResponse, error) {
+	id, err := uuid.Parse(req.SchemaId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid schema_id")
+	}
+
+	offset, err := pagination.DecodeOffset(req.PageToken)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid page_token")
+	}
+	limit := pagination.ClampPageSize(int(req.PageSize), schema.DefaultPageSize, schema.MaxPageSize)
+
+	versions, total, err := h.service.ListVersions(ctx, id, limit, offset)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &schemav1.ListSchemaVersionsResponse{
+		Versions:      schemaVersionsToProto(versions),
+		TotalSize:     total,
+		NextPageToken: pagination.NextToken(offset, len(versions), total),
 	}, nil
 }

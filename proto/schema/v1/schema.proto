@@ -36,6 +36,36 @@ message Schema {
   google.protobuf.Timestamp created_at = 8;
   google.protobuf.Timestamp updated_at = 9;
   SchemaStatus status = 10;
+  // version is the schema's content version, incrementing from 1 every time
+  // its content changes. Unrelated to ocpp_version.
+  int32 version = 11;
+}
+
+// SchemaVersion is one historical entry in a schema's content changelog.
+message SchemaVersion {
+  int32 version = 1;
+  bytes schema = 2;
+  google.protobuf.Timestamp created_at = 3;
+}
+
+// ListSchemaVersionsRequest returns the content changelog for a single schema.
+message ListSchemaVersionsRequest {
+  string schema_id = 1;
+  // Max results per page. <= 0 applies the server default (50), capped at 200.
+  int32 page_size = 2;
+  // Opaque cursor from a previous ListSchemaVersionsResponse.next_page_token.
+  // Omit to fetch the first page.
+  string page_token = 3;
+}
+
+message ListSchemaVersionsResponse {
+  // versions is ordered newest first.
+  repeated SchemaVersion versions = 1;
+  // Total number of versions for this schema, ignoring pagination.
+  int64 total_size = 2;
+  // Pass as ListSchemaVersionsRequest.page_token to fetch the next page. Empty
+  // when this is the last page.
+  string next_page_token = 3;
 }
 
 // AddSchemaRequest creates both the request and response schemas for an action in one call.
@@ -136,4 +166,6 @@ service SchemaRegistryService {
   // SearchSchemas returns verified schemas, optionally filtered by OCPP
   // version, vendor, model, action, and message type.
   rpc SearchSchemas(SearchSchemasRequest) returns (SearchSchemasResponse);
+  // ListSchemaVersions returns the content changelog for a schema, newest first.
+  rpc ListSchemaVersions(ListSchemaVersionsRequest) returns (ListSchemaVersionsResponse);
 }

@@ -40,6 +40,13 @@ type Repository interface {
 	// paginated. Returns the page of results plus the total count of matching
 	// combinations, ignoring limit/offset.
 	ListVendorModels(ctx context.Context, vendor string, models []string, limit, offset uint32) ([]*VendorModel, int64, error)
+	// ListVersions returns the content changelog for the schema with the given
+	// ID, newest first, paginated. A nonexistent schemaID yields an empty page,
+	// not an error.
+	ListVersions(ctx context.Context, schemaID uuid.UUID, limit, offset uint32) ([]*SchemaVersion, int64, error)
+	// GetVersion retrieves a single historical version's content for a schema.
+	// Returns ErrNotFound if that version doesn't exist for that schema.
+	GetVersion(ctx context.Context, schemaID uuid.UUID, version int) (*SchemaVersion, error)
 }
 
 type Cache interface {
