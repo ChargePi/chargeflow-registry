@@ -13,6 +13,7 @@ import (
 
 type ValidationService interface {
 	ValidateMessage(ctx context.Context, req validation.Request) (*validation.Result, error)
+	ValidateMessages(ctx context.Context, req validation.BulkRequest) ([]validation.ReportEntry, error)
 }
 
 type ValidationHandler struct {
@@ -50,13 +51,56 @@ func (h *ValidationHandler) ValidateMessage(ctx context.Context, req *schemav1.V
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	resp := &schemav1.ValidateMessageResponse{Valid: result.Valid}
-	for _, v := range result.Violations {
-		resp.Violations = append(resp.Violations, &schemav1.ValidationViolation{
-			Field:   v.Field,
-			Message: v.Message,
-		})
+	return &schemav1.ValidateMessageResponse{Valid: result.Valid, Violations: violationsToProto(result.Violations)}, nil
+}
+
+// BulkValidateMessages validates a list of OCPP-J messages against the given
+// OCPP version, vendor and model, reading each message's own action and
+// message type off it, and returns one report entry per message, in the
+// same order they were supplied.
+func (h *ValidationHandler) BulkValidateMessages(ctx context.Context, req *schemav1.BulkValidateMessagesRequest) (*schemav1.BulkValidateMessagesResponse, error) {
+	if err := validateOcppVersion(req.OcppVersion); err != nil {
+		return nil, err
+	}
+	if err := validateVendorModel(req.Vendor, req.Model); err != nil {
+		return nil, err
+	}
+	if len(req.Messages) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "at least one message is required")
+	}
+	if len(req.Messages) > validation.MaxBulkMessages {
+		return nil, status.Errorf(codes.InvalidArgument, "too many messages: max %d per request", validation.MaxBulkMessages)
 	}
 
-	return resp, nil
+	entries, err := h.service.ValidateMessages(ctx, validation.BulkRequest{
+		Version:  ocppVersionToDomain(req.OcppVersion),
+		Vendor:   req.Vendor,
+		Model:    req.Model,
+		Messages: req.Messages,
+	})
+	if err != nil {
+		if errors.Is(err, schema.ErrNotFound) {
+			return nil, status.Error(codes.NotFound, "no schema found for the given parameters")
+		}
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	results := make([]*schemav1.ValidationReportEntry, len(entries))
+	for i, e := range entries {
+		results[i] = &schemav1.ValidationReportEntry{
+			Index:      int32(e.Index),
+			Valid:      e.Valid,
+			Violations: violationsToProto(e.Violations),
+		}
+	}
+
+	return &schemav1.BulkValidateMessagesResponse{Results: results}, nil
+}
+
+func violationsToProto(violations []validation.Violation) []*schemav1.ValidationViolation {
+	out := make([]*schemav1.ValidationViolation, len(violations))
+	for i, v := range violations {
+		out[i] = &schemav1.ValidationViolation{Field: v.Field, Message: v.Message}
+	}
+	return out
 }

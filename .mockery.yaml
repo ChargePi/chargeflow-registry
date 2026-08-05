@@ -1,18 +1,20 @@
-with-expecter: true
-dir: gen/mocks/{{.InterfaceDirRelative}}
-mockname: "Mock{{.InterfaceName}}"
-outpkg: "{{.PackageName}}"
-filename: "{{.InterfaceName|snakecase}}_mock.go"
+dir: gen/mocks/{{trimPrefix "internal/" .InterfaceDirRelative}}
+structname: Mock{{.InterfaceName}}
+pkgname: '{{.SrcPackageName}}'
+filename: '{{.InterfaceName | snakecase}}_mock.go'
+template: testify
+template-data:
+  unroll-variadic: true
 packages:
-  github.com/ChargePi/chargeflow-registry/internal/schema:
-    interfaces:
-      Repository:
-      Cache:
   github.com/ChargePi/chargeflow-registry/internal/grpc:
     interfaces:
-      SchemaService:
-      ValidationService:
-      AdminService:
+      AdminService: {}
+      SchemaService: {}
+      ValidationService: {}
+  github.com/ChargePi/chargeflow-registry/internal/schema:
+    interfaces:
+      Cache: {}
+      Repository: {}
   github.com/ChargePi/chargeflow-registry/internal/validation:
     interfaces:
-      SchemaGetter:
+      SchemaGetter: {}

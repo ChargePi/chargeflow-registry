@@ -37,12 +37,19 @@ func validateVendorModel(vendor, model *string) error {
 	return nil
 }
 
-func validateActionKey(version schemav1.OcppVersion, action string) error {
+func validateOcppVersion(version schemav1.OcppVersion) error {
 	if version == schemav1.OcppVersion_OCPP_VERSION_UNSPECIFIED {
 		return status.Error(codes.InvalidArgument, "ocpp_version is required")
 	}
 	if _, ok := schemav1.OcppVersion_name[int32(version)]; !ok {
 		return status.Error(codes.InvalidArgument, "unknown ocpp_version")
+	}
+	return nil
+}
+
+func validateActionKey(version schemav1.OcppVersion, action string) error {
+	if err := validateOcppVersion(version); err != nil {
+		return err
 	}
 	if action == "" {
 		return status.Error(codes.InvalidArgument, "action is required")
