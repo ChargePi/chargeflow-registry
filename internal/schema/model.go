@@ -40,8 +40,18 @@ type Schema struct {
 	Model       *string
 	Schema      json.RawMessage
 	Status      Status
+	Version     int
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+}
+
+// SchemaVersion is one historical entry in a schema's content changelog.
+type SchemaVersion struct {
+	ID        uuid.UUID
+	SchemaID  uuid.UUID
+	Version   int
+	Schema    json.RawMessage
+	CreatedAt time.Time
 }
 
 // VendorModel identifies a charge point model available for a given OCPP version.

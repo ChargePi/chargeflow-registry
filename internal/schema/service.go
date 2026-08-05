@@ -180,6 +180,58 @@ func (s *Service) ListVendorModels(ctx context.Context, vendor string, models []
 	return vendorModels, total, nil
 }
 
+// ListVersions returns the content changelog for the schema with the given ID,
+// newest first, paginated.
+func (s *Service) ListVersions(ctx context.Context, id uuid.UUID, limit, offset uint32) ([]*SchemaVersion, int64, error) {
+	ctx, span := tracer.Start(ctx, "schema.ListVersions")
+	defer span.End()
+
+	versions, total, err := s.repo.ListVersions(ctx, id, clampPageSize(limit), offset)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, 0, fmt.Errorf("list schema versions: %w", err)
+	}
+	return versions, total, nil
+}
+
+// GetVersion retrieves a schema at a specific historical content version. It
+// resolves the schema slot through the same cached, verified-only lookup as
+// Get, then either returns that result directly (if it already is the
+// requested version) or fetches the archived content from the changelog.
+func (s *Service) GetVersion(ctx context.Context, version OCPPVersion, action string, msgType MessageType, vendor, model *string, schemaVersion int) (*Schema, error) {
+	ctx, span := tracer.Start(ctx, "schema.GetVersion", trace.WithAttributes(
+		ocppVersionAttr(version),
+		actionAttr(action),
+		messageTypeAttr(msgType),
+	))
+	defer span.End()
+
+	sc, err := s.Get(ctx, version, action, msgType, vendor, model)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, fmt.Errorf("get schema: %w", err)
+	}
+
+	if sc.Version == schemaVersion {
+		return sc, nil
+	}
+
+	archived, err := s.repo.GetVersion(ctx, sc.ID, schemaVersion)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, fmt.Errorf("get schema version: %w", err)
+	}
+
+	out := *sc
+	out.Schema = archived.Schema
+	out.Version = archived.Version
+	out.UpdatedAt = archived.CreatedAt
+	return &out, nil
+}
+
 func clampPageSize(limit uint32) uint32 {
 	if limit == 0 {
 		return DefaultPageSize

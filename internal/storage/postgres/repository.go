@@ -2,12 +2,15 @@ package postgres
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 
 	"github.com/ChargePi/chargeflow-registry/internal/schema"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type SchemaRepository struct {
@@ -53,7 +56,19 @@ func (r *SchemaRepository) Get(ctx context.Context, version schema.OCPPVersion, 
 
 func (r *SchemaRepository) Add(ctx context.Context, s *schema.Schema) error {
 	entity := toEntity(s)
-	if err := r.db.WithContext(ctx).Create(entity).Error; err != nil {
+	entity.Version = 1
+
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(entity).Error; err != nil {
+			return err
+		}
+		return tx.Create(&schemaVersionEntity{
+			SchemaID: entity.ID,
+			Version:  entity.Version,
+			Schema:   entity.Schema,
+		}).Error
+	})
+	if err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			return schema.ErrAlreadyExists
 		}
@@ -61,6 +76,7 @@ func (r *SchemaRepository) Add(ctx context.Context, s *schema.Schema) error {
 	}
 
 	s.ID = entity.ID
+	s.Version = entity.Version
 	return nil
 }
 
@@ -118,19 +134,132 @@ func (r *SchemaRepository) UpdateStatus(ctx context.Context, id uuid.UUID, statu
 	return toDomain(&entity), nil
 }
 
+// Upsert inserts a new schema at version 1, or updates an existing one's content
+// and appends a changelog entry to schema_versions. If the incoming content is
+// byte-identical to what's already stored, the version and changelog are left
+// untouched. Status is never modified by an update, matching the previous
+// Assign-based behavior.
 func (r *SchemaRepository) Upsert(ctx context.Context, s *schema.Schema) error {
-	entity := toEntity(s)
-	err := r.db.WithContext(ctx).
-		Where("ocpp_version = ? AND action = ? AND message_type = ? AND vendor IS NOT DISTINCT FROM ? AND model IS NOT DISTINCT FROM ?",
-			s.OCPPVersion, s.Action, s.MessageType, s.Vendor, s.Model).
-		Assign(schemaEntity{Schema: s.Schema}).
-		FirstOrCreate(entity).Error
+	var err error
+	// Two attempts: if the "row doesn't exist yet" branch loses a race to a
+	// concurrent Upsert on the same logical key (both see no row, both try to
+	// insert), the loser hits schemas_lookup_unique. Retrying re-reads and takes
+	// the update path against the row the winner just created.
+	for attempt := 0; attempt < 2; attempt++ {
+		err = r.upsertOnce(ctx, s)
+		if err == nil || !errors.Is(err, gorm.ErrDuplicatedKey) {
+			break
+		}
+	}
 	if err != nil {
 		return fmt.Errorf("upsert schema: %w", err)
 	}
-
-	s.ID = entity.ID
 	return nil
+}
+
+func (r *SchemaRepository) upsertOnce(ctx context.Context, s *schema.Schema) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var existing schemaEntity
+		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("ocpp_version = ? AND action = ? AND message_type = ? AND vendor IS NOT DISTINCT FROM ? AND model IS NOT DISTINCT FROM ?",
+				s.OCPPVersion, s.Action, s.MessageType, s.Vendor, s.Model).
+			First(&existing).Error
+
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			entity := toEntity(s)
+			entity.Version = 1
+			if err := tx.Create(entity).Error; err != nil {
+				return err
+			}
+			if err := tx.Create(&schemaVersionEntity{
+				SchemaID: entity.ID,
+				Version:  entity.Version,
+				Schema:   entity.Schema,
+			}).Error; err != nil {
+				return err
+			}
+			s.ID = entity.ID
+			s.Version = entity.Version
+			return nil
+		case err != nil:
+			return err
+		}
+
+		if jsonContentEqual(existing.Schema, s.Schema) {
+			s.ID = existing.ID
+			s.Version = existing.Version
+			return nil
+		}
+
+		newVersion := existing.Version + 1
+		if err := tx.Model(&schemaEntity{}).Where("id = ?", existing.ID).
+			Updates(map[string]any{"schema": s.Schema, "version": newVersion}).Error; err != nil {
+			return err
+		}
+		if err := tx.Create(&schemaVersionEntity{
+			SchemaID: existing.ID,
+			Version:  newVersion,
+			Schema:   s.Schema,
+		}).Error; err != nil {
+			return err
+		}
+
+		s.ID = existing.ID
+		s.Version = newVersion
+		return nil
+	})
+}
+
+// jsonContentEqual reports whether a and b encode the same JSON document,
+// ignoring formatting differences. This is necessary because jsonb columns
+// are re-serialized by Postgres on write (whitespace stripped, keys and
+// numbers reformatted), so a raw byte comparison between a freshly-read row
+// and an incoming request would almost always report "different" even for
+// semantically identical content.
+func jsonContentEqual(a, b []byte) bool {
+	var av, bv any
+	if err := json.Unmarshal(a, &av); err != nil {
+		return false
+	}
+	if err := json.Unmarshal(b, &bv); err != nil {
+		return false
+	}
+	return reflect.DeepEqual(av, bv)
+}
+
+// ListVersions returns the content changelog for a schema, newest first,
+// paginated. A nonexistent schemaID simply yields an empty page.
+func (r *SchemaRepository) ListVersions(ctx context.Context, schemaID uuid.UUID, limit, offset uint32) ([]*schema.SchemaVersion, int64, error) {
+	query := r.db.WithContext(ctx).Model(&schemaVersionEntity{}).Where("schema_id = ?", schemaID)
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("count schema versions: %w", err)
+	}
+
+	var entities []*schemaVersionEntity
+	if err := query.Order("version DESC").Limit(int(limit)).Offset(int(offset)).Find(&entities).Error; err != nil {
+		return nil, 0, fmt.Errorf("list schema versions: %w", err)
+	}
+
+	return toVersionDomainSlice(entities), total, nil
+}
+
+// GetVersion retrieves a single historical version's content for a schema.
+func (r *SchemaRepository) GetVersion(ctx context.Context, schemaID uuid.UUID, version int) (*schema.SchemaVersion, error) {
+	var entity schemaVersionEntity
+	err := r.db.WithContext(ctx).
+		Where("schema_id = ? AND version = ?", schemaID, version).
+		First(&entity).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, schema.ErrNotFound
+		}
+		return nil, fmt.Errorf("get schema version: %w", err)
+	}
+
+	return toVersionDomain(&entity), nil
 }
 
 // ListVendorModels returns the distinct OCPP version/vendor/model combinations for

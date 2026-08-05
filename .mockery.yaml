@@ -1,5 +1,10 @@
 with-expecter: true
-dir: gen/mocks/{{.InterfaceDirRelative}}
+# Deliberately not gen/mocks/{{.InterfaceDirRelative}}: since every interface here
+# lives under an "internal/" source directory, that pattern would produce paths
+# like gen/mocks/internal/schema, which Go's internal-import rule then restricts
+# to only be importable from within gen/mocks/** — unusable from _test.go files
+# living under internal/**, which is the whole point of generating these mocks.
+dir: gen/mocks/{{.PackageName}}
 mockname: "Mock{{.InterfaceName}}"
 outpkg: "{{.PackageName}}"
 filename: "{{.InterfaceName|snakecase}}_mock.go"
@@ -16,3 +21,6 @@ packages:
   github.com/ChargePi/chargeflow-registry/internal/validation:
     interfaces:
       SchemaGetter:
+  github.com/ChargePi/chargeflow-registry/internal/mcp:
+    interfaces:
+      SchemaRegistry:
