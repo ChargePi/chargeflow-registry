@@ -136,29 +136,11 @@ func (r *SchemaRepository) UpdateStatus(ctx context.Context, id uuid.UUID, statu
 
 // Upsert inserts a new schema at version 1, or updates an existing one's content
 // and appends a changelog entry to schema_versions. If the incoming content is
-// byte-identical to what's already stored, the version and changelog are left
+// unchanged from what's already stored, the version and changelog are left
 // untouched. Status is never modified by an update, matching the previous
 // Assign-based behavior.
 func (r *SchemaRepository) Upsert(ctx context.Context, s *schema.Schema) error {
-	var err error
-	// Two attempts: if the "row doesn't exist yet" branch loses a race to a
-	// concurrent Upsert on the same logical key (both see no row, both try to
-	// insert), the loser hits schemas_lookup_unique. Retrying re-reads and takes
-	// the update path against the row the winner just created.
-	for attempt := 0; attempt < 2; attempt++ {
-		err = r.upsertOnce(ctx, s)
-		if err == nil || !errors.Is(err, gorm.ErrDuplicatedKey) {
-			break
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("upsert schema: %w", err)
-	}
-	return nil
-}
-
-func (r *SchemaRepository) upsertOnce(ctx context.Context, s *schema.Schema) error {
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var existing schemaEntity
 		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("ocpp_version = ? AND action = ? AND message_type = ? AND vendor IS NOT DISTINCT FROM ? AND model IS NOT DISTINCT FROM ?",
@@ -209,6 +191,10 @@ func (r *SchemaRepository) upsertOnce(ctx context.Context, s *schema.Schema) err
 		s.Version = newVersion
 		return nil
 	})
+	if err != nil {
+		return fmt.Errorf("upsert schema: %w", err)
+	}
+	return nil
 }
 
 // jsonContentEqual reports whether a and b encode the same JSON document,
