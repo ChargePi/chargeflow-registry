@@ -209,6 +209,183 @@ func (x *ValidateMessageResponse) GetViolations() []*ValidationViolation {
 	return nil
 }
 
+type BulkValidateMessagesRequest struct {
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	OcppVersion OcppVersion            `protobuf:"varint,1,opt,name=ocpp_version,json=ocppVersion,proto3,enum=schema.v1.OcppVersion" json:"ocpp_version,omitempty"`
+	Vendor      *string                `protobuf:"bytes,2,opt,name=vendor,proto3,oneof" json:"vendor,omitempty"`
+	Model       *string                `protobuf:"bytes,3,opt,name=model,proto3,oneof" json:"model,omitempty"`
+	// OCPP-J messages as JSON objects ({"messageTypeId", "uniqueId", "action",
+	// "payload"}); action and message type are read from each message rather
+	// than supplied once for the whole batch. Validated against the schema
+	// they identify and returned in the same order as supplied here.
+	Messages      []string `protobuf:"bytes,4,rep,name=messages,proto3" json:"messages,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BulkValidateMessagesRequest) Reset() {
+	*x = BulkValidateMessagesRequest{}
+	mi := &file_schema_v1_validation_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BulkValidateMessagesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BulkValidateMessagesRequest) ProtoMessage() {}
+
+func (x *BulkValidateMessagesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_schema_v1_validation_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BulkValidateMessagesRequest.ProtoReflect.Descriptor instead.
+func (*BulkValidateMessagesRequest) Descriptor() ([]byte, []int) {
+	return file_schema_v1_validation_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *BulkValidateMessagesRequest) GetOcppVersion() OcppVersion {
+	if x != nil {
+		return x.OcppVersion
+	}
+	return OcppVersion_OCPP_VERSION_UNSPECIFIED
+}
+
+func (x *BulkValidateMessagesRequest) GetVendor() string {
+	if x != nil && x.Vendor != nil {
+		return *x.Vendor
+	}
+	return ""
+}
+
+func (x *BulkValidateMessagesRequest) GetModel() string {
+	if x != nil && x.Model != nil {
+		return *x.Model
+	}
+	return ""
+}
+
+func (x *BulkValidateMessagesRequest) GetMessages() []string {
+	if x != nil {
+		return x.Messages
+	}
+	return nil
+}
+
+type ValidationReportEntry struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Position of the corresponding message in the request's messages list.
+	Index         int32                  `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
+	Valid         bool                   `protobuf:"varint,2,opt,name=valid,proto3" json:"valid,omitempty"`
+	Violations    []*ValidationViolation `protobuf:"bytes,3,rep,name=violations,proto3" json:"violations,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ValidationReportEntry) Reset() {
+	*x = ValidationReportEntry{}
+	mi := &file_schema_v1_validation_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ValidationReportEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidationReportEntry) ProtoMessage() {}
+
+func (x *ValidationReportEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_schema_v1_validation_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ValidationReportEntry.ProtoReflect.Descriptor instead.
+func (*ValidationReportEntry) Descriptor() ([]byte, []int) {
+	return file_schema_v1_validation_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ValidationReportEntry) GetIndex() int32 {
+	if x != nil {
+		return x.Index
+	}
+	return 0
+}
+
+func (x *ValidationReportEntry) GetValid() bool {
+	if x != nil {
+		return x.Valid
+	}
+	return false
+}
+
+func (x *ValidationReportEntry) GetViolations() []*ValidationViolation {
+	if x != nil {
+		return x.Violations
+	}
+	return nil
+}
+
+type BulkValidateMessagesResponse struct {
+	state         protoimpl.MessageState   `protogen:"open.v1"`
+	Results       []*ValidationReportEntry `protobuf:"bytes,1,rep,name=results,proto3" json:"results,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BulkValidateMessagesResponse) Reset() {
+	*x = BulkValidateMessagesResponse{}
+	mi := &file_schema_v1_validation_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BulkValidateMessagesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BulkValidateMessagesResponse) ProtoMessage() {}
+
+func (x *BulkValidateMessagesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_schema_v1_validation_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BulkValidateMessagesResponse.ProtoReflect.Descriptor instead.
+func (*BulkValidateMessagesResponse) Descriptor() ([]byte, []int) {
+	return file_schema_v1_validation_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *BulkValidateMessagesResponse) GetResults() []*ValidationReportEntry {
+	if x != nil {
+		return x.Results
+	}
+	return nil
+}
+
 var File_schema_v1_validation_proto protoreflect.FileDescriptor
 
 const file_schema_v1_validation_proto_rawDesc = "" +
@@ -230,9 +407,25 @@ const file_schema_v1_validation_proto_rawDesc = "" +
 	"\x05valid\x18\x01 \x01(\bR\x05valid\x12>\n" +
 	"\n" +
 	"violations\x18\x02 \x03(\v2\x1e.schema.v1.ValidationViolationR\n" +
-	"violations2s\n" +
+	"violations\"\xc1\x01\n" +
+	"\x1bBulkValidateMessagesRequest\x129\n" +
+	"\focpp_version\x18\x01 \x01(\x0e2\x16.schema.v1.OcppVersionR\vocppVersion\x12\x1b\n" +
+	"\x06vendor\x18\x02 \x01(\tH\x00R\x06vendor\x88\x01\x01\x12\x19\n" +
+	"\x05model\x18\x03 \x01(\tH\x01R\x05model\x88\x01\x01\x12\x1a\n" +
+	"\bmessages\x18\x04 \x03(\tR\bmessagesB\t\n" +
+	"\a_vendorB\b\n" +
+	"\x06_model\"\x83\x01\n" +
+	"\x15ValidationReportEntry\x12\x14\n" +
+	"\x05index\x18\x01 \x01(\x05R\x05index\x12\x14\n" +
+	"\x05valid\x18\x02 \x01(\bR\x05valid\x12>\n" +
+	"\n" +
+	"violations\x18\x03 \x03(\v2\x1e.schema.v1.ValidationViolationR\n" +
+	"violations\"Z\n" +
+	"\x1cBulkValidateMessagesResponse\x12:\n" +
+	"\aresults\x18\x01 \x03(\v2 .schema.v1.ValidationReportEntryR\aresults2\xdc\x01\n" +
 	"\x17SchemaValidationService\x12X\n" +
-	"\x0fValidateMessage\x12!.schema.v1.ValidateMessageRequest\x1a\".schema.v1.ValidateMessageResponseB\xab\x01\n" +
+	"\x0fValidateMessage\x12!.schema.v1.ValidateMessageRequest\x1a\".schema.v1.ValidateMessageResponse\x12g\n" +
+	"\x14BulkValidateMessages\x12&.schema.v1.BulkValidateMessagesRequest\x1a'.schema.v1.BulkValidateMessagesResponseB\xab\x01\n" +
 	"\rcom.schema.v1B\x0fValidationProtoP\x01ZDgithub.com/ChargePi/chargeflow-registry/gen/proto/schema/v1;schemav1\xa2\x02\x03SXX\xaa\x02\tSchema.V1\xca\x02\tSchema\\V1\xe2\x02\x15Schema\\V1\\GPBMetadata\xea\x02\n" +
 	"Schema::V1b\x06proto3"
 
@@ -248,25 +441,33 @@ func file_schema_v1_validation_proto_rawDescGZIP() []byte {
 	return file_schema_v1_validation_proto_rawDescData
 }
 
-var file_schema_v1_validation_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_schema_v1_validation_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_schema_v1_validation_proto_goTypes = []any{
-	(*ValidationViolation)(nil),     // 0: schema.v1.ValidationViolation
-	(*ValidateMessageRequest)(nil),  // 1: schema.v1.ValidateMessageRequest
-	(*ValidateMessageResponse)(nil), // 2: schema.v1.ValidateMessageResponse
-	(OcppVersion)(0),                // 3: schema.v1.OcppVersion
-	(MessageType)(0),                // 4: schema.v1.MessageType
+	(*ValidationViolation)(nil),          // 0: schema.v1.ValidationViolation
+	(*ValidateMessageRequest)(nil),       // 1: schema.v1.ValidateMessageRequest
+	(*ValidateMessageResponse)(nil),      // 2: schema.v1.ValidateMessageResponse
+	(*BulkValidateMessagesRequest)(nil),  // 3: schema.v1.BulkValidateMessagesRequest
+	(*ValidationReportEntry)(nil),        // 4: schema.v1.ValidationReportEntry
+	(*BulkValidateMessagesResponse)(nil), // 5: schema.v1.BulkValidateMessagesResponse
+	(OcppVersion)(0),                     // 6: schema.v1.OcppVersion
+	(MessageType)(0),                     // 7: schema.v1.MessageType
 }
 var file_schema_v1_validation_proto_depIdxs = []int32{
-	3, // 0: schema.v1.ValidateMessageRequest.ocpp_version:type_name -> schema.v1.OcppVersion
-	4, // 1: schema.v1.ValidateMessageRequest.message_type:type_name -> schema.v1.MessageType
+	6, // 0: schema.v1.ValidateMessageRequest.ocpp_version:type_name -> schema.v1.OcppVersion
+	7, // 1: schema.v1.ValidateMessageRequest.message_type:type_name -> schema.v1.MessageType
 	0, // 2: schema.v1.ValidateMessageResponse.violations:type_name -> schema.v1.ValidationViolation
-	1, // 3: schema.v1.SchemaValidationService.ValidateMessage:input_type -> schema.v1.ValidateMessageRequest
-	2, // 4: schema.v1.SchemaValidationService.ValidateMessage:output_type -> schema.v1.ValidateMessageResponse
-	4, // [4:5] is the sub-list for method output_type
-	3, // [3:4] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	6, // 3: schema.v1.BulkValidateMessagesRequest.ocpp_version:type_name -> schema.v1.OcppVersion
+	0, // 4: schema.v1.ValidationReportEntry.violations:type_name -> schema.v1.ValidationViolation
+	4, // 5: schema.v1.BulkValidateMessagesResponse.results:type_name -> schema.v1.ValidationReportEntry
+	1, // 6: schema.v1.SchemaValidationService.ValidateMessage:input_type -> schema.v1.ValidateMessageRequest
+	3, // 7: schema.v1.SchemaValidationService.BulkValidateMessages:input_type -> schema.v1.BulkValidateMessagesRequest
+	2, // 8: schema.v1.SchemaValidationService.ValidateMessage:output_type -> schema.v1.ValidateMessageResponse
+	5, // 9: schema.v1.SchemaValidationService.BulkValidateMessages:output_type -> schema.v1.BulkValidateMessagesResponse
+	8, // [8:10] is the sub-list for method output_type
+	6, // [6:8] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_schema_v1_validation_proto_init() }
@@ -276,13 +477,14 @@ func file_schema_v1_validation_proto_init() {
 	}
 	file_schema_v1_schema_proto_init()
 	file_schema_v1_validation_proto_msgTypes[1].OneofWrappers = []any{}
+	file_schema_v1_validation_proto_msgTypes[3].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_schema_v1_validation_proto_rawDesc), len(file_schema_v1_validation_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

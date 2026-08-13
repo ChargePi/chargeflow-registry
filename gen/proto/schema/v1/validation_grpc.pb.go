@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SchemaValidationServiceClient interface {
 	ValidateMessage(ctx context.Context, in *ValidateMessageRequest, opts ...grpc.CallOption) (*ValidateMessageResponse, error)
+	BulkValidateMessages(ctx context.Context, in *BulkValidateMessagesRequest, opts ...grpc.CallOption) (*BulkValidateMessagesResponse, error)
 }
 
 type schemaValidationServiceClient struct {
@@ -38,11 +39,21 @@ func (c *schemaValidationServiceClient) ValidateMessage(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *schemaValidationServiceClient) BulkValidateMessages(ctx context.Context, in *BulkValidateMessagesRequest, opts ...grpc.CallOption) (*BulkValidateMessagesResponse, error) {
+	out := new(BulkValidateMessagesResponse)
+	err := c.cc.Invoke(ctx, "/schema.v1.SchemaValidationService/BulkValidateMessages", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SchemaValidationServiceServer is the server API for SchemaValidationService service.
 // All implementations must embed UnimplementedSchemaValidationServiceServer
 // for forward compatibility
 type SchemaValidationServiceServer interface {
 	ValidateMessage(context.Context, *ValidateMessageRequest) (*ValidateMessageResponse, error)
+	BulkValidateMessages(context.Context, *BulkValidateMessagesRequest) (*BulkValidateMessagesResponse, error)
 	mustEmbedUnimplementedSchemaValidationServiceServer()
 }
 
@@ -52,6 +63,9 @@ type UnimplementedSchemaValidationServiceServer struct {
 
 func (UnimplementedSchemaValidationServiceServer) ValidateMessage(context.Context, *ValidateMessageRequest) (*ValidateMessageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidateMessage not implemented")
+}
+func (UnimplementedSchemaValidationServiceServer) BulkValidateMessages(context.Context, *BulkValidateMessagesRequest) (*BulkValidateMessagesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BulkValidateMessages not implemented")
 }
 func (UnimplementedSchemaValidationServiceServer) mustEmbedUnimplementedSchemaValidationServiceServer() {
 }
@@ -85,6 +99,24 @@ func _SchemaValidationService_ValidateMessage_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SchemaValidationService_BulkValidateMessages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BulkValidateMessagesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchemaValidationServiceServer).BulkValidateMessages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/schema.v1.SchemaValidationService/BulkValidateMessages",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchemaValidationServiceServer).BulkValidateMessages(ctx, req.(*BulkValidateMessagesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SchemaValidationService_ServiceDesc is the grpc.ServiceDesc for SchemaValidationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -95,6 +127,10 @@ var SchemaValidationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ValidateMessage",
 			Handler:    _SchemaValidationService_ValidateMessage_Handler,
+		},
+		{
+			MethodName: "BulkValidateMessages",
+			Handler:    _SchemaValidationService_BulkValidateMessages_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

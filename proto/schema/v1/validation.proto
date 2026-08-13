@@ -23,6 +23,29 @@ message ValidateMessageResponse {
   repeated ValidationViolation violations = 2;
 }
 
+message BulkValidateMessagesRequest {
+  OcppVersion ocpp_version = 1;
+  optional string vendor = 2;
+  optional string model = 3;
+  // OCPP-J messages as JSON objects ({"messageTypeId", "uniqueId", "action",
+  // "payload"}); action and message type are read from each message rather
+  // than supplied once for the whole batch. Validated against the schema
+  // they identify and returned in the same order as supplied here.
+  repeated string messages = 4;
+}
+
+message ValidationReportEntry {
+  // Position of the corresponding message in the request's messages list.
+  int32 index = 1;
+  bool valid = 2;
+  repeated ValidationViolation violations = 3;
+}
+
+message BulkValidateMessagesResponse {
+  repeated ValidationReportEntry results = 1;
+}
+
 service SchemaValidationService {
   rpc ValidateMessage(ValidateMessageRequest) returns (ValidateMessageResponse);
+  rpc BulkValidateMessages(BulkValidateMessagesRequest) returns (BulkValidateMessagesResponse);
 }
