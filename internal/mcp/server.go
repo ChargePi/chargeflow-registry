@@ -7,6 +7,7 @@ import (
 	"github.com/ChargePi/chargeflow-registry/internal/validation"
 	mcplogging_zap "github.com/ChargePi/chargex-sdk/mcp/logging/zap"
 	mcp_tracing "github.com/ChargePi/chargex-sdk/mcp/tracing"
+	"github.com/google/uuid"
 	"github.com/mark3labs/mcp-go/server"
 	"go.uber.org/zap"
 )
@@ -14,9 +15,11 @@ import (
 // SchemaRegistry is the subset of schema.Service used by the MCP server.
 type SchemaRegistry interface {
 	Get(ctx context.Context, version schema.OCPPVersion, action string, msgType schema.MessageType, vendor, model *string) (*schema.Schema, error)
+	GetVersion(ctx context.Context, version schema.OCPPVersion, action string, msgType schema.MessageType, vendor, model *string, schemaVersion int) (*schema.Schema, error)
 	AddPair(ctx context.Context, req, resp *schema.Schema) error
 	Delete(ctx context.Context, version schema.OCPPVersion, action string, vendor, model *string) error
 	List(ctx context.Context, version schema.OCPPVersion, vendor, model, action *string, msgType *schema.MessageType, status *schema.Status, limit, offset uint32) ([]*schema.Schema, int64, error)
+	ListVersions(ctx context.Context, id uuid.UUID, limit, offset uint32) ([]*schema.SchemaVersion, int64, error)
 }
 
 // MessageValidator is the subset of validation.Service used by the MCP server.

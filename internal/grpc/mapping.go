@@ -92,6 +92,7 @@ func schemaToProto(s *schema.Schema) *schemav1.Schema {
 		CreatedAt:   timestamppb.New(s.CreatedAt),
 		UpdatedAt:   timestamppb.New(s.UpdatedAt),
 		Status:      schemaStatusToProto(s.Status),
+		Version:     int32(s.Version),
 	}
 }
 
@@ -99,6 +100,22 @@ func schemasToProto(schemas []*schema.Schema) []*schemav1.Schema {
 	out := make([]*schemav1.Schema, len(schemas))
 	for i, s := range schemas {
 		out[i] = schemaToProto(s)
+	}
+	return out
+}
+
+func schemaVersionToProto(v *schema.SchemaVersion) *schemav1.SchemaVersion {
+	return &schemav1.SchemaVersion{
+		Version:   int32(v.Version),
+		Schema:    v.Schema,
+		CreatedAt: timestamppb.New(v.CreatedAt),
+	}
+}
+
+func schemaVersionsToProto(versions []*schema.SchemaVersion) []*schemav1.SchemaVersion {
+	out := make([]*schemav1.SchemaVersion, len(versions))
+	for i, v := range versions {
+		out[i] = schemaVersionToProto(v)
 	}
 	return out
 }

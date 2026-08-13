@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/ChargePi/chargeflow-registry/internal/schema"
+	"github.com/google/uuid"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -380,6 +381,92 @@ func (_c *MockSchemaService_ListVendorModels_Call) Return(vendorModels []*schema
 }
 
 func (_c *MockSchemaService_ListVendorModels_Call) RunAndReturn(run func(ctx context.Context, vendor string, models []string, limit uint32, offset uint32) ([]*schema.VendorModel, int64, error)) *MockSchemaService_ListVendorModels_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListVersions provides a mock function for the type MockSchemaService
+func (_mock *MockSchemaService) ListVersions(ctx context.Context, id uuid.UUID, limit uint32, offset uint32) ([]*schema.SchemaVersion, int64, error) {
+	ret := _mock.Called(ctx, id, limit, offset)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListVersions")
+	}
+
+	var r0 []*schema.SchemaVersion
+	var r1 int64
+	var r2 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, uint32, uint32) ([]*schema.SchemaVersion, int64, error)); ok {
+		return returnFunc(ctx, id, limit, offset)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, uint32, uint32) []*schema.SchemaVersion); ok {
+		r0 = returnFunc(ctx, id, limit, offset)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*schema.SchemaVersion)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID, uint32, uint32) int64); ok {
+		r1 = returnFunc(ctx, id, limit, offset)
+	} else {
+		r1 = ret.Get(1).(int64)
+	}
+	if returnFunc, ok := ret.Get(2).(func(context.Context, uuid.UUID, uint32, uint32) error); ok {
+		r2 = returnFunc(ctx, id, limit, offset)
+	} else {
+		r2 = ret.Error(2)
+	}
+	return r0, r1, r2
+}
+
+// MockSchemaService_ListVersions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListVersions'
+type MockSchemaService_ListVersions_Call struct {
+	*mock.Call
+}
+
+// ListVersions is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+//   - limit uint32
+//   - offset uint32
+func (_e *MockSchemaService_Expecter) ListVersions(ctx interface{}, id interface{}, limit interface{}, offset interface{}) *MockSchemaService_ListVersions_Call {
+	return &MockSchemaService_ListVersions_Call{Call: _e.mock.On("ListVersions", ctx, id, limit, offset)}
+}
+
+func (_c *MockSchemaService_ListVersions_Call) Run(run func(ctx context.Context, id uuid.UUID, limit uint32, offset uint32)) *MockSchemaService_ListVersions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 uint32
+		if args[2] != nil {
+			arg2 = args[2].(uint32)
+		}
+		var arg3 uint32
+		if args[3] != nil {
+			arg3 = args[3].(uint32)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *MockSchemaService_ListVersions_Call) Return(schemaVersions []*schema.SchemaVersion, n int64, err error) *MockSchemaService_ListVersions_Call {
+	_c.Call.Return(schemaVersions, n, err)
+	return _c
+}
+
+func (_c *MockSchemaService_ListVersions_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID, limit uint32, offset uint32) ([]*schema.SchemaVersion, int64, error)) *MockSchemaService_ListVersions_Call {
 	_c.Call.Return(run)
 	return _c
 }

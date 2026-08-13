@@ -177,17 +177,20 @@ func (SchemaStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 type Schema struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	OcppVersion   OcppVersion            `protobuf:"varint,2,opt,name=ocpp_version,json=ocppVersion,proto3,enum=schema.v1.OcppVersion" json:"ocpp_version,omitempty"`
-	Action        string                 `protobuf:"bytes,3,opt,name=action,proto3" json:"action,omitempty"`
-	MessageType   MessageType            `protobuf:"varint,4,opt,name=message_type,json=messageType,proto3,enum=schema.v1.MessageType" json:"message_type,omitempty"`
-	Vendor        *string                `protobuf:"bytes,5,opt,name=vendor,proto3,oneof" json:"vendor,omitempty"`
-	Model         *string                `protobuf:"bytes,6,opt,name=model,proto3,oneof" json:"model,omitempty"`
-	Schema        []byte                 `protobuf:"bytes,7,opt,name=schema,proto3" json:"schema,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	Status        SchemaStatus           `protobuf:"varint,10,opt,name=status,proto3,enum=schema.v1.SchemaStatus" json:"status,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Id          string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	OcppVersion OcppVersion            `protobuf:"varint,2,opt,name=ocpp_version,json=ocppVersion,proto3,enum=schema.v1.OcppVersion" json:"ocpp_version,omitempty"`
+	Action      string                 `protobuf:"bytes,3,opt,name=action,proto3" json:"action,omitempty"`
+	MessageType MessageType            `protobuf:"varint,4,opt,name=message_type,json=messageType,proto3,enum=schema.v1.MessageType" json:"message_type,omitempty"`
+	Vendor      *string                `protobuf:"bytes,5,opt,name=vendor,proto3,oneof" json:"vendor,omitempty"`
+	Model       *string                `protobuf:"bytes,6,opt,name=model,proto3,oneof" json:"model,omitempty"`
+	Schema      []byte                 `protobuf:"bytes,7,opt,name=schema,proto3" json:"schema,omitempty"`
+	CreatedAt   *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt   *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Status      SchemaStatus           `protobuf:"varint,10,opt,name=status,proto3,enum=schema.v1.SchemaStatus" json:"status,omitempty"`
+	// version is the schema's content version, incrementing from 1 every time
+	// its content changes. Unrelated to ocpp_version.
+	Version       int32 `protobuf:"varint,11,opt,name=version,proto3" json:"version,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -292,6 +295,202 @@ func (x *Schema) GetStatus() SchemaStatus {
 	return SchemaStatus_SCHEMA_STATUS_UNSPECIFIED
 }
 
+func (x *Schema) GetVersion() int32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+// SchemaVersion is one historical entry in a schema's content changelog.
+type SchemaVersion struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Version       int32                  `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
+	Schema        []byte                 `protobuf:"bytes,2,opt,name=schema,proto3" json:"schema,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SchemaVersion) Reset() {
+	*x = SchemaVersion{}
+	mi := &file_schema_v1_schema_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SchemaVersion) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SchemaVersion) ProtoMessage() {}
+
+func (x *SchemaVersion) ProtoReflect() protoreflect.Message {
+	mi := &file_schema_v1_schema_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SchemaVersion.ProtoReflect.Descriptor instead.
+func (*SchemaVersion) Descriptor() ([]byte, []int) {
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *SchemaVersion) GetVersion() int32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *SchemaVersion) GetSchema() []byte {
+	if x != nil {
+		return x.Schema
+	}
+	return nil
+}
+
+func (x *SchemaVersion) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+// ListSchemaVersionsRequest returns the content changelog for a single schema.
+type ListSchemaVersionsRequest struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	SchemaId string                 `protobuf:"bytes,1,opt,name=schema_id,json=schemaId,proto3" json:"schema_id,omitempty"`
+	// Max results per page. <= 0 applies the server default (50), capped at 200.
+	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	// Opaque cursor from a previous ListSchemaVersionsResponse.next_page_token.
+	// Omit to fetch the first page.
+	PageToken     string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListSchemaVersionsRequest) Reset() {
+	*x = ListSchemaVersionsRequest{}
+	mi := &file_schema_v1_schema_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSchemaVersionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSchemaVersionsRequest) ProtoMessage() {}
+
+func (x *ListSchemaVersionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_schema_v1_schema_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSchemaVersionsRequest.ProtoReflect.Descriptor instead.
+func (*ListSchemaVersionsRequest) Descriptor() ([]byte, []int) {
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ListSchemaVersionsRequest) GetSchemaId() string {
+	if x != nil {
+		return x.SchemaId
+	}
+	return ""
+}
+
+func (x *ListSchemaVersionsRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *ListSchemaVersionsRequest) GetPageToken() string {
+	if x != nil {
+		return x.PageToken
+	}
+	return ""
+}
+
+type ListSchemaVersionsResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// versions is ordered newest first.
+	Versions []*SchemaVersion `protobuf:"bytes,1,rep,name=versions,proto3" json:"versions,omitempty"`
+	// Total number of versions for this schema, ignoring pagination.
+	TotalSize int64 `protobuf:"varint,2,opt,name=total_size,json=totalSize,proto3" json:"total_size,omitempty"`
+	// Pass as ListSchemaVersionsRequest.page_token to fetch the next page. Empty
+	// when this is the last page.
+	NextPageToken string `protobuf:"bytes,3,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListSchemaVersionsResponse) Reset() {
+	*x = ListSchemaVersionsResponse{}
+	mi := &file_schema_v1_schema_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSchemaVersionsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSchemaVersionsResponse) ProtoMessage() {}
+
+func (x *ListSchemaVersionsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_schema_v1_schema_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSchemaVersionsResponse.ProtoReflect.Descriptor instead.
+func (*ListSchemaVersionsResponse) Descriptor() ([]byte, []int) {
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ListSchemaVersionsResponse) GetVersions() []*SchemaVersion {
+	if x != nil {
+		return x.Versions
+	}
+	return nil
+}
+
+func (x *ListSchemaVersionsResponse) GetTotalSize() int64 {
+	if x != nil {
+		return x.TotalSize
+	}
+	return 0
+}
+
+func (x *ListSchemaVersionsResponse) GetNextPageToken() string {
+	if x != nil {
+		return x.NextPageToken
+	}
+	return ""
+}
+
 // AddSchemaRequest creates both the request and response schemas for an action in one call.
 type AddSchemaRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
@@ -307,7 +506,7 @@ type AddSchemaRequest struct {
 
 func (x *AddSchemaRequest) Reset() {
 	*x = AddSchemaRequest{}
-	mi := &file_schema_v1_schema_proto_msgTypes[1]
+	mi := &file_schema_v1_schema_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -319,7 +518,7 @@ func (x *AddSchemaRequest) String() string {
 func (*AddSchemaRequest) ProtoMessage() {}
 
 func (x *AddSchemaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_schema_v1_schema_proto_msgTypes[1]
+	mi := &file_schema_v1_schema_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -332,7 +531,7 @@ func (x *AddSchemaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddSchemaRequest.ProtoReflect.Descriptor instead.
 func (*AddSchemaRequest) Descriptor() ([]byte, []int) {
-	return file_schema_v1_schema_proto_rawDescGZIP(), []int{1}
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *AddSchemaRequest) GetOcppVersion() OcppVersion {
@@ -385,7 +584,7 @@ type AddSchemaResponse struct {
 
 func (x *AddSchemaResponse) Reset() {
 	*x = AddSchemaResponse{}
-	mi := &file_schema_v1_schema_proto_msgTypes[2]
+	mi := &file_schema_v1_schema_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -397,7 +596,7 @@ func (x *AddSchemaResponse) String() string {
 func (*AddSchemaResponse) ProtoMessage() {}
 
 func (x *AddSchemaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_schema_v1_schema_proto_msgTypes[2]
+	mi := &file_schema_v1_schema_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -410,7 +609,7 @@ func (x *AddSchemaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddSchemaResponse.ProtoReflect.Descriptor instead.
 func (*AddSchemaResponse) Descriptor() ([]byte, []int) {
-	return file_schema_v1_schema_proto_rawDescGZIP(), []int{2}
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{5}
 }
 
 // UpsertSchemaRequest updates either the request or response schema for an action.
@@ -428,7 +627,7 @@ type UpsertSchemaRequest struct {
 
 func (x *UpsertSchemaRequest) Reset() {
 	*x = UpsertSchemaRequest{}
-	mi := &file_schema_v1_schema_proto_msgTypes[3]
+	mi := &file_schema_v1_schema_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -440,7 +639,7 @@ func (x *UpsertSchemaRequest) String() string {
 func (*UpsertSchemaRequest) ProtoMessage() {}
 
 func (x *UpsertSchemaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_schema_v1_schema_proto_msgTypes[3]
+	mi := &file_schema_v1_schema_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -453,7 +652,7 @@ func (x *UpsertSchemaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpsertSchemaRequest.ProtoReflect.Descriptor instead.
 func (*UpsertSchemaRequest) Descriptor() ([]byte, []int) {
-	return file_schema_v1_schema_proto_rawDescGZIP(), []int{3}
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *UpsertSchemaRequest) GetOcppVersion() OcppVersion {
@@ -506,7 +705,7 @@ type UpsertSchemaResponse struct {
 
 func (x *UpsertSchemaResponse) Reset() {
 	*x = UpsertSchemaResponse{}
-	mi := &file_schema_v1_schema_proto_msgTypes[4]
+	mi := &file_schema_v1_schema_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -518,7 +717,7 @@ func (x *UpsertSchemaResponse) String() string {
 func (*UpsertSchemaResponse) ProtoMessage() {}
 
 func (x *UpsertSchemaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_schema_v1_schema_proto_msgTypes[4]
+	mi := &file_schema_v1_schema_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -531,7 +730,7 @@ func (x *UpsertSchemaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpsertSchemaResponse.ProtoReflect.Descriptor instead.
 func (*UpsertSchemaResponse) Descriptor() ([]byte, []int) {
-	return file_schema_v1_schema_proto_rawDescGZIP(), []int{4}
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{7}
 }
 
 // DeleteSchemaRequest removes both the request and response schemas for an action.
@@ -547,7 +746,7 @@ type DeleteSchemaRequest struct {
 
 func (x *DeleteSchemaRequest) Reset() {
 	*x = DeleteSchemaRequest{}
-	mi := &file_schema_v1_schema_proto_msgTypes[5]
+	mi := &file_schema_v1_schema_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -559,7 +758,7 @@ func (x *DeleteSchemaRequest) String() string {
 func (*DeleteSchemaRequest) ProtoMessage() {}
 
 func (x *DeleteSchemaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_schema_v1_schema_proto_msgTypes[5]
+	mi := &file_schema_v1_schema_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -572,7 +771,7 @@ func (x *DeleteSchemaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteSchemaRequest.ProtoReflect.Descriptor instead.
 func (*DeleteSchemaRequest) Descriptor() ([]byte, []int) {
-	return file_schema_v1_schema_proto_rawDescGZIP(), []int{5}
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DeleteSchemaRequest) GetOcppVersion() OcppVersion {
@@ -611,7 +810,7 @@ type DeleteSchemaResponse struct {
 
 func (x *DeleteSchemaResponse) Reset() {
 	*x = DeleteSchemaResponse{}
-	mi := &file_schema_v1_schema_proto_msgTypes[6]
+	mi := &file_schema_v1_schema_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -623,7 +822,7 @@ func (x *DeleteSchemaResponse) String() string {
 func (*DeleteSchemaResponse) ProtoMessage() {}
 
 func (x *DeleteSchemaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_schema_v1_schema_proto_msgTypes[6]
+	mi := &file_schema_v1_schema_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -636,7 +835,7 @@ func (x *DeleteSchemaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteSchemaResponse.ProtoReflect.Descriptor instead.
 func (*DeleteSchemaResponse) Descriptor() ([]byte, []int) {
-	return file_schema_v1_schema_proto_rawDescGZIP(), []int{6}
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{9}
 }
 
 // VendorModel identifies a charge point model available for a given OCPP version.
@@ -651,7 +850,7 @@ type VendorModel struct {
 
 func (x *VendorModel) Reset() {
 	*x = VendorModel{}
-	mi := &file_schema_v1_schema_proto_msgTypes[7]
+	mi := &file_schema_v1_schema_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -663,7 +862,7 @@ func (x *VendorModel) String() string {
 func (*VendorModel) ProtoMessage() {}
 
 func (x *VendorModel) ProtoReflect() protoreflect.Message {
-	mi := &file_schema_v1_schema_proto_msgTypes[7]
+	mi := &file_schema_v1_schema_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -676,7 +875,7 @@ func (x *VendorModel) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VendorModel.ProtoReflect.Descriptor instead.
 func (*VendorModel) Descriptor() ([]byte, []int) {
-	return file_schema_v1_schema_proto_rawDescGZIP(), []int{7}
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *VendorModel) GetOcppVersion() OcppVersion {
@@ -717,7 +916,7 @@ type ListVendorModelsRequest struct {
 
 func (x *ListVendorModelsRequest) Reset() {
 	*x = ListVendorModelsRequest{}
-	mi := &file_schema_v1_schema_proto_msgTypes[8]
+	mi := &file_schema_v1_schema_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -729,7 +928,7 @@ func (x *ListVendorModelsRequest) String() string {
 func (*ListVendorModelsRequest) ProtoMessage() {}
 
 func (x *ListVendorModelsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_schema_v1_schema_proto_msgTypes[8]
+	mi := &file_schema_v1_schema_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -742,7 +941,7 @@ func (x *ListVendorModelsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListVendorModelsRequest.ProtoReflect.Descriptor instead.
 func (*ListVendorModelsRequest) Descriptor() ([]byte, []int) {
-	return file_schema_v1_schema_proto_rawDescGZIP(), []int{8}
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ListVendorModelsRequest) GetVendor() string {
@@ -787,7 +986,7 @@ type ListVendorModelsResponse struct {
 
 func (x *ListVendorModelsResponse) Reset() {
 	*x = ListVendorModelsResponse{}
-	mi := &file_schema_v1_schema_proto_msgTypes[9]
+	mi := &file_schema_v1_schema_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -799,7 +998,7 @@ func (x *ListVendorModelsResponse) String() string {
 func (*ListVendorModelsResponse) ProtoMessage() {}
 
 func (x *ListVendorModelsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_schema_v1_schema_proto_msgTypes[9]
+	mi := &file_schema_v1_schema_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -812,7 +1011,7 @@ func (x *ListVendorModelsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListVendorModelsResponse.ProtoReflect.Descriptor instead.
 func (*ListVendorModelsResponse) Descriptor() ([]byte, []int) {
-	return file_schema_v1_schema_proto_rawDescGZIP(), []int{9}
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ListVendorModelsResponse) GetVendorModels() []*VendorModel {
@@ -858,7 +1057,7 @@ type SearchSchemasRequest struct {
 
 func (x *SearchSchemasRequest) Reset() {
 	*x = SearchSchemasRequest{}
-	mi := &file_schema_v1_schema_proto_msgTypes[10]
+	mi := &file_schema_v1_schema_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -870,7 +1069,7 @@ func (x *SearchSchemasRequest) String() string {
 func (*SearchSchemasRequest) ProtoMessage() {}
 
 func (x *SearchSchemasRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_schema_v1_schema_proto_msgTypes[10]
+	mi := &file_schema_v1_schema_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -883,7 +1082,7 @@ func (x *SearchSchemasRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchSchemasRequest.ProtoReflect.Descriptor instead.
 func (*SearchSchemasRequest) Descriptor() ([]byte, []int) {
-	return file_schema_v1_schema_proto_rawDescGZIP(), []int{10}
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *SearchSchemasRequest) GetOcppVersion() OcppVersion {
@@ -949,7 +1148,7 @@ type SearchSchemasResponse struct {
 
 func (x *SearchSchemasResponse) Reset() {
 	*x = SearchSchemasResponse{}
-	mi := &file_schema_v1_schema_proto_msgTypes[11]
+	mi := &file_schema_v1_schema_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -961,7 +1160,7 @@ func (x *SearchSchemasResponse) String() string {
 func (*SearchSchemasResponse) ProtoMessage() {}
 
 func (x *SearchSchemasResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_schema_v1_schema_proto_msgTypes[11]
+	mi := &file_schema_v1_schema_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -974,7 +1173,7 @@ func (x *SearchSchemasResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchSchemasResponse.ProtoReflect.Descriptor instead.
 func (*SearchSchemasResponse) Descriptor() ([]byte, []int) {
-	return file_schema_v1_schema_proto_rawDescGZIP(), []int{11}
+	return file_schema_v1_schema_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *SearchSchemasResponse) GetSchemas() []*Schema {
@@ -1002,7 +1201,7 @@ var File_schema_v1_schema_proto protoreflect.FileDescriptor
 
 const file_schema_v1_schema_proto_rawDesc = "" +
 	"\n" +
-	"\x16schema/v1/schema.proto\x12\tschema.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb2\x03\n" +
+	"\x16schema/v1/schema.proto\x12\tschema.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xcc\x03\n" +
 	"\x06Schema\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x129\n" +
 	"\focpp_version\x18\x02 \x01(\x0e2\x16.schema.v1.OcppVersionR\vocppVersion\x12\x16\n" +
@@ -1016,9 +1215,25 @@ const file_schema_v1_schema_proto_rawDesc = "" +
 	"\n" +
 	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12/\n" +
 	"\x06status\x18\n" +
-	" \x01(\x0e2\x17.schema.v1.SchemaStatusR\x06statusB\t\n" +
+	" \x01(\x0e2\x17.schema.v1.SchemaStatusR\x06status\x12\x18\n" +
+	"\aversion\x18\v \x01(\x05R\aversionB\t\n" +
 	"\a_vendorB\b\n" +
-	"\x06_model\"\x82\x02\n" +
+	"\x06_model\"|\n" +
+	"\rSchemaVersion\x12\x18\n" +
+	"\aversion\x18\x01 \x01(\x05R\aversion\x12\x16\n" +
+	"\x06schema\x18\x02 \x01(\fR\x06schema\x129\n" +
+	"\n" +
+	"created_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"t\n" +
+	"\x19ListSchemaVersionsRequest\x12\x1b\n" +
+	"\tschema_id\x18\x01 \x01(\tR\bschemaId\x12\x1b\n" +
+	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x1d\n" +
+	"\n" +
+	"page_token\x18\x03 \x01(\tR\tpageToken\"\x99\x01\n" +
+	"\x1aListSchemaVersionsResponse\x124\n" +
+	"\bversions\x18\x01 \x03(\v2\x18.schema.v1.SchemaVersionR\bversions\x12\x1d\n" +
+	"\n" +
+	"total_size\x18\x02 \x01(\x03R\ttotalSize\x12&\n" +
+	"\x0fnext_page_token\x18\x03 \x01(\tR\rnextPageToken\"\x82\x02\n" +
 	"\x10AddSchemaRequest\x129\n" +
 	"\focpp_version\x18\x01 \x01(\x0e2\x16.schema.v1.OcppVersionR\vocppVersion\x12\x16\n" +
 	"\x06action\x18\x02 \x01(\tR\x06action\x12\x1b\n" +
@@ -1093,13 +1308,14 @@ const file_schema_v1_schema_proto_rawDesc = "" +
 	"\x19SCHEMA_STATUS_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17SCHEMA_STATUS_SUBMITTED\x10\x01\x12\x1a\n" +
 	"\x16SCHEMA_STATUS_VERIFIED\x10\x02\x12\x1a\n" +
-	"\x16SCHEMA_STATUS_REJECTED\x10\x032\xb2\x03\n" +
+	"\x16SCHEMA_STATUS_REJECTED\x10\x032\x95\x04\n" +
 	"\x15SchemaRegistryService\x12F\n" +
 	"\tAddSchema\x12\x1b.schema.v1.AddSchemaRequest\x1a\x1c.schema.v1.AddSchemaResponse\x12O\n" +
 	"\fUpsertSchema\x12\x1e.schema.v1.UpsertSchemaRequest\x1a\x1f.schema.v1.UpsertSchemaResponse\x12O\n" +
 	"\fDeleteSchema\x12\x1e.schema.v1.DeleteSchemaRequest\x1a\x1f.schema.v1.DeleteSchemaResponse\x12[\n" +
 	"\x10ListVendorModels\x12\".schema.v1.ListVendorModelsRequest\x1a#.schema.v1.ListVendorModelsResponse\x12R\n" +
-	"\rSearchSchemas\x12\x1f.schema.v1.SearchSchemasRequest\x1a .schema.v1.SearchSchemasResponseB\xa7\x01\n" +
+	"\rSearchSchemas\x12\x1f.schema.v1.SearchSchemasRequest\x1a .schema.v1.SearchSchemasResponse\x12a\n" +
+	"\x12ListSchemaVersions\x12$.schema.v1.ListSchemaVersionsRequest\x1a%.schema.v1.ListSchemaVersionsResponseB\xa7\x01\n" +
 	"\rcom.schema.v1B\vSchemaProtoP\x01ZDgithub.com/ChargePi/chargeflow-registry/gen/proto/schema/v1;schemav1\xa2\x02\x03SXX\xaa\x02\tSchema.V1\xca\x02\tSchema\\V1\xe2\x02\x15Schema\\V1\\GPBMetadata\xea\x02\n" +
 	"Schema::V1b\x06proto3"
 
@@ -1116,55 +1332,62 @@ func file_schema_v1_schema_proto_rawDescGZIP() []byte {
 }
 
 var file_schema_v1_schema_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_schema_v1_schema_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_schema_v1_schema_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_schema_v1_schema_proto_goTypes = []any{
-	(OcppVersion)(0),                 // 0: schema.v1.OcppVersion
-	(MessageType)(0),                 // 1: schema.v1.MessageType
-	(SchemaStatus)(0),                // 2: schema.v1.SchemaStatus
-	(*Schema)(nil),                   // 3: schema.v1.Schema
-	(*AddSchemaRequest)(nil),         // 4: schema.v1.AddSchemaRequest
-	(*AddSchemaResponse)(nil),        // 5: schema.v1.AddSchemaResponse
-	(*UpsertSchemaRequest)(nil),      // 6: schema.v1.UpsertSchemaRequest
-	(*UpsertSchemaResponse)(nil),     // 7: schema.v1.UpsertSchemaResponse
-	(*DeleteSchemaRequest)(nil),      // 8: schema.v1.DeleteSchemaRequest
-	(*DeleteSchemaResponse)(nil),     // 9: schema.v1.DeleteSchemaResponse
-	(*VendorModel)(nil),              // 10: schema.v1.VendorModel
-	(*ListVendorModelsRequest)(nil),  // 11: schema.v1.ListVendorModelsRequest
-	(*ListVendorModelsResponse)(nil), // 12: schema.v1.ListVendorModelsResponse
-	(*SearchSchemasRequest)(nil),     // 13: schema.v1.SearchSchemasRequest
-	(*SearchSchemasResponse)(nil),    // 14: schema.v1.SearchSchemasResponse
-	(*timestamppb.Timestamp)(nil),    // 15: google.protobuf.Timestamp
+	(OcppVersion)(0),                   // 0: schema.v1.OcppVersion
+	(MessageType)(0),                   // 1: schema.v1.MessageType
+	(SchemaStatus)(0),                  // 2: schema.v1.SchemaStatus
+	(*Schema)(nil),                     // 3: schema.v1.Schema
+	(*SchemaVersion)(nil),              // 4: schema.v1.SchemaVersion
+	(*ListSchemaVersionsRequest)(nil),  // 5: schema.v1.ListSchemaVersionsRequest
+	(*ListSchemaVersionsResponse)(nil), // 6: schema.v1.ListSchemaVersionsResponse
+	(*AddSchemaRequest)(nil),           // 7: schema.v1.AddSchemaRequest
+	(*AddSchemaResponse)(nil),          // 8: schema.v1.AddSchemaResponse
+	(*UpsertSchemaRequest)(nil),        // 9: schema.v1.UpsertSchemaRequest
+	(*UpsertSchemaResponse)(nil),       // 10: schema.v1.UpsertSchemaResponse
+	(*DeleteSchemaRequest)(nil),        // 11: schema.v1.DeleteSchemaRequest
+	(*DeleteSchemaResponse)(nil),       // 12: schema.v1.DeleteSchemaResponse
+	(*VendorModel)(nil),                // 13: schema.v1.VendorModel
+	(*ListVendorModelsRequest)(nil),    // 14: schema.v1.ListVendorModelsRequest
+	(*ListVendorModelsResponse)(nil),   // 15: schema.v1.ListVendorModelsResponse
+	(*SearchSchemasRequest)(nil),       // 16: schema.v1.SearchSchemasRequest
+	(*SearchSchemasResponse)(nil),      // 17: schema.v1.SearchSchemasResponse
+	(*timestamppb.Timestamp)(nil),      // 18: google.protobuf.Timestamp
 }
 var file_schema_v1_schema_proto_depIdxs = []int32{
 	0,  // 0: schema.v1.Schema.ocpp_version:type_name -> schema.v1.OcppVersion
 	1,  // 1: schema.v1.Schema.message_type:type_name -> schema.v1.MessageType
-	15, // 2: schema.v1.Schema.created_at:type_name -> google.protobuf.Timestamp
-	15, // 3: schema.v1.Schema.updated_at:type_name -> google.protobuf.Timestamp
+	18, // 2: schema.v1.Schema.created_at:type_name -> google.protobuf.Timestamp
+	18, // 3: schema.v1.Schema.updated_at:type_name -> google.protobuf.Timestamp
 	2,  // 4: schema.v1.Schema.status:type_name -> schema.v1.SchemaStatus
-	0,  // 5: schema.v1.AddSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
-	0,  // 6: schema.v1.UpsertSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
-	1,  // 7: schema.v1.UpsertSchemaRequest.message_type:type_name -> schema.v1.MessageType
-	0,  // 8: schema.v1.DeleteSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
-	0,  // 9: schema.v1.VendorModel.ocpp_version:type_name -> schema.v1.OcppVersion
-	10, // 10: schema.v1.ListVendorModelsResponse.vendor_models:type_name -> schema.v1.VendorModel
-	0,  // 11: schema.v1.SearchSchemasRequest.ocpp_version:type_name -> schema.v1.OcppVersion
-	1,  // 12: schema.v1.SearchSchemasRequest.message_type:type_name -> schema.v1.MessageType
-	3,  // 13: schema.v1.SearchSchemasResponse.schemas:type_name -> schema.v1.Schema
-	4,  // 14: schema.v1.SchemaRegistryService.AddSchema:input_type -> schema.v1.AddSchemaRequest
-	6,  // 15: schema.v1.SchemaRegistryService.UpsertSchema:input_type -> schema.v1.UpsertSchemaRequest
-	8,  // 16: schema.v1.SchemaRegistryService.DeleteSchema:input_type -> schema.v1.DeleteSchemaRequest
-	11, // 17: schema.v1.SchemaRegistryService.ListVendorModels:input_type -> schema.v1.ListVendorModelsRequest
-	13, // 18: schema.v1.SchemaRegistryService.SearchSchemas:input_type -> schema.v1.SearchSchemasRequest
-	5,  // 19: schema.v1.SchemaRegistryService.AddSchema:output_type -> schema.v1.AddSchemaResponse
-	7,  // 20: schema.v1.SchemaRegistryService.UpsertSchema:output_type -> schema.v1.UpsertSchemaResponse
-	9,  // 21: schema.v1.SchemaRegistryService.DeleteSchema:output_type -> schema.v1.DeleteSchemaResponse
-	12, // 22: schema.v1.SchemaRegistryService.ListVendorModels:output_type -> schema.v1.ListVendorModelsResponse
-	14, // 23: schema.v1.SchemaRegistryService.SearchSchemas:output_type -> schema.v1.SearchSchemasResponse
-	19, // [19:24] is the sub-list for method output_type
-	14, // [14:19] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	18, // 5: schema.v1.SchemaVersion.created_at:type_name -> google.protobuf.Timestamp
+	4,  // 6: schema.v1.ListSchemaVersionsResponse.versions:type_name -> schema.v1.SchemaVersion
+	0,  // 7: schema.v1.AddSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
+	0,  // 8: schema.v1.UpsertSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
+	1,  // 9: schema.v1.UpsertSchemaRequest.message_type:type_name -> schema.v1.MessageType
+	0,  // 10: schema.v1.DeleteSchemaRequest.ocpp_version:type_name -> schema.v1.OcppVersion
+	0,  // 11: schema.v1.VendorModel.ocpp_version:type_name -> schema.v1.OcppVersion
+	13, // 12: schema.v1.ListVendorModelsResponse.vendor_models:type_name -> schema.v1.VendorModel
+	0,  // 13: schema.v1.SearchSchemasRequest.ocpp_version:type_name -> schema.v1.OcppVersion
+	1,  // 14: schema.v1.SearchSchemasRequest.message_type:type_name -> schema.v1.MessageType
+	3,  // 15: schema.v1.SearchSchemasResponse.schemas:type_name -> schema.v1.Schema
+	7,  // 16: schema.v1.SchemaRegistryService.AddSchema:input_type -> schema.v1.AddSchemaRequest
+	9,  // 17: schema.v1.SchemaRegistryService.UpsertSchema:input_type -> schema.v1.UpsertSchemaRequest
+	11, // 18: schema.v1.SchemaRegistryService.DeleteSchema:input_type -> schema.v1.DeleteSchemaRequest
+	14, // 19: schema.v1.SchemaRegistryService.ListVendorModels:input_type -> schema.v1.ListVendorModelsRequest
+	16, // 20: schema.v1.SchemaRegistryService.SearchSchemas:input_type -> schema.v1.SearchSchemasRequest
+	5,  // 21: schema.v1.SchemaRegistryService.ListSchemaVersions:input_type -> schema.v1.ListSchemaVersionsRequest
+	8,  // 22: schema.v1.SchemaRegistryService.AddSchema:output_type -> schema.v1.AddSchemaResponse
+	10, // 23: schema.v1.SchemaRegistryService.UpsertSchema:output_type -> schema.v1.UpsertSchemaResponse
+	12, // 24: schema.v1.SchemaRegistryService.DeleteSchema:output_type -> schema.v1.DeleteSchemaResponse
+	15, // 25: schema.v1.SchemaRegistryService.ListVendorModels:output_type -> schema.v1.ListVendorModelsResponse
+	17, // 26: schema.v1.SchemaRegistryService.SearchSchemas:output_type -> schema.v1.SearchSchemasResponse
+	6,  // 27: schema.v1.SchemaRegistryService.ListSchemaVersions:output_type -> schema.v1.ListSchemaVersionsResponse
+	22, // [22:28] is the sub-list for method output_type
+	16, // [16:22] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_schema_v1_schema_proto_init() }
@@ -1173,17 +1396,17 @@ func file_schema_v1_schema_proto_init() {
 		return
 	}
 	file_schema_v1_schema_proto_msgTypes[0].OneofWrappers = []any{}
-	file_schema_v1_schema_proto_msgTypes[1].OneofWrappers = []any{}
-	file_schema_v1_schema_proto_msgTypes[3].OneofWrappers = []any{}
-	file_schema_v1_schema_proto_msgTypes[5].OneofWrappers = []any{}
-	file_schema_v1_schema_proto_msgTypes[10].OneofWrappers = []any{}
+	file_schema_v1_schema_proto_msgTypes[4].OneofWrappers = []any{}
+	file_schema_v1_schema_proto_msgTypes[6].OneofWrappers = []any{}
+	file_schema_v1_schema_proto_msgTypes[8].OneofWrappers = []any{}
+	file_schema_v1_schema_proto_msgTypes[13].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_schema_v1_schema_proto_rawDesc), len(file_schema_v1_schema_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   12,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

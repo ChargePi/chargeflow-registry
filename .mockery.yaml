@@ -18,3 +18,6 @@ packages:
   github.com/ChargePi/chargeflow-registry/internal/validation:
     interfaces:
       SchemaGetter: {}
+  github.com/ChargePi/chargeflow-registry/internal/mcp:
+    interfaces:
+      SchemaRegistry: {}
