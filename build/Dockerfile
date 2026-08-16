@@ -1,4 +1,4 @@
-FROM golang:1.26.0 AS build
+FROM golang:1.26.6 AS build
 WORKDIR /app/src
 
 ENV GOCACHE=/root/.cache/go-build
