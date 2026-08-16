@@ -18,6 +18,31 @@ session, not after. That matters most at two points that otherwise cost teams re
   proof, not assurances. A central, versioned registry gives you an auditable record of exactly which schema a given
   vendor/model was validated against.
 
+## Architecture
+
+Chargeflow Registry is a single Go binary exposing three interfaces — a registry gRPC API, an isolated admin gRPC
+API, and an MCP server for LLM agents — over one shared service layer, backed by Postgres with a Redis cache in
+front of it.
+
+```mermaid
+flowchart LR
+    Clients["CPMS / Agents / Operators"] --> App["chargeflow-registry\n(gRPC + Admin gRPC + MCP)"]
+    App --> Cache[("Redis")]
+    App --> DB[("PostgreSQL")]
+```
+
+## Deployment
+
+The full stack (Postgres, Redis, migrations, and the app) runs via Docker Compose:
+
+```bash
+make docker-up    # build and start the stack
+make docker-down  # tear it down
+```
+
+The app and its `migrate` companion are container images configured via environment variables, and are equally
+suited to running standalone or in a cluster, with migrations applied before the app starts.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) file for details.
